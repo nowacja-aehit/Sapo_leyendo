@@ -7,10 +7,11 @@ package com.mycompany.sapo_leyendo;
 /**
  *
  * @author j0now
+ * No siema siema ~ Filip.S
  */
-public class Sapo_leyendo {
+public class SapoLeyendo {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        System.out.println("Hello, World!");
     }
 }
