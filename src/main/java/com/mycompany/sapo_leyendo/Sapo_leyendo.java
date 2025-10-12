@@ -1,0 +1,16 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ */
+
+package com.mycompany.sapo_leyendo;
+
+/**
+ *
+ * @author j0now
+ */
+public class Sapo_leyendo {
+
+    public static void main(String[] args) {
+        System.out.println("Hello World!");
+    }
+}
