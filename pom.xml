@@ -1,13 +1,64 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <!-- Informacje o Twoim projekcie -->
     <groupId>com.mycompany</groupId>
     <artifactId>Sapo_leyendo</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        
+        <!-- 
+          Ustawiamy wersję Javy na 23, tak jak w Twoim środowisku.
+          Użycie <maven.compiler.release> jest nowocześniejsze niż source/target.
+        -->
         <maven.compiler.release>23</maven.compiler.release>
+        
+        <!-- Definiujemy klasę główną dla wtyczki exec -->
         <exec.mainClass>com.mycompany.sapo_leyendo.Sapo_leyendo</exec.mainClass>
     </properties>
+
+    <dependencies>
+        
+        <!-- 
+          TO JEST KLUCZOWY BRAKUJĄCY ELEMENT!
+          Ta sekcja mówi Mavenowi, aby automatycznie pobrał
+          sterownik SQLite (plik .jar) i dodał go do Twojego projektu.
+        -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.45.3.0</version> <!-- Używamy stabilnej wersji -->
+        </dependency>
+        
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <!-- Plugin do ustawienia wersji kompilatora Javy -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <!-- Upewniamy się, że plugin szanuje właściwość 'release' -->
+                    <release>${maven.compiler.release}</release>
+                </configuration>
+            </plugin>
+            
+            <!-- Plugin do uruchamiania (ten, którego używa NetBeans) -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>${exec.mainClass}</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    
 </project>
