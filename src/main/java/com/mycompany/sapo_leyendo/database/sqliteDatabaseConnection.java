@@ -1,160 +1,227 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.sapo_leyendo.database;
 
+// Zaktualizowane importy
+import com.mycompany.sapo_leyendo.model.Product;
+import com.mycompany.sapo_leyendo.model.User;
+
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
- * Konkretna implementacja interfejsu bazy danych używająca SQLite.
- *
- * @author j0now (i Gemini)
+ * ZAKTUALIZOWANA Implementacja (Twoja "Realna Baza")
+ * Zależna od SqlScriptRunner.java i modeli Product.java/User.java
  */
 public class sqliteDatabaseConnection implements DatabaseInterface {
 
-    // Ścieżka do pliku bazy danych. Plik zostanie utworzony w głównym katalogu projektu.
-    private static final String DB_URL = "jdbc:sqlite:wms_sapo_leyendo.db";
+    private final String dbUrl;
+    
+    // ZAKTUALIZOWANE ŚCIEŻKI:
+    // Zakładamy, że aplikacja jest uruchamiana z głównego folderu projektu,
+    // a NetBeans/Maven poprawnie skopiuje te zasoby.
+    // Używamy "src/main/java/" jako bazy dla ścieżek
+    // (Dostosuj, jeśli Twoje pliki SQL są gdzie indziej, np. w "src/main/resources")
+    private final String dbSchemaFile = "src/main/java/com/mycompany/sapo_leyendo/database/CreateDB_sqlite.sql";
+    private final String dbSeederFile = "src/main/java/com/mycompany/sapo_leyendo/database/FillDatabase_sqlite.sql";
 
-    private Connection connection;
+
+    public sqliteDatabaseConnection(String dbName) {
+        this.dbUrl = "jdbc:sqlite:" + dbName;
+    }
 
     @Override
-    public void connect() {
-        try {
-            // Sprawdzenie, czy sterownik JDBC jest dostępny
-            Class.forName("org.sqlite.JDBC");
+    public Connection getConnection() throws SQLException {
+        Connection conn = DriverManager.getConnection(dbUrl);
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA journal_mode=WAL");
+            stmt.execute("PRAGMA foreign_keys=ON");
+            stmt.execute("PRAGMA busy_timeout=5000"); // 5 sekund
+        }
+        return conn;
+    }
+
+    /**
+     * Wykonuje skrypt tworzący strukturę bazy (CreateDB_sqlite.sql).
+     */
+    @Override
+    public void initializeDatabase() throws SQLException {
+        try (Connection conn = getConnection()) {
+            // Używamy nowej klasy SqlScriptRunner
+            SqlScriptRunner.executeScript(conn, dbSchemaFile);
+        } catch (IOException e) {
+            System.err.println("Nie można wczytać pliku schema SQL: " + e.getMessage());
+            throw new SQLException("Błąd I/O podczas inicjalizacji bazy", e);
+        }
+    }
+
+    /**
+     * Wykonuje skrypt wypełniający bazę danymi (FillDatabase_sqlite.sql).
+     */
+    @Override
+    public void seedDatabase() throws SQLException {
+        try (Connection conn = getConnection()) {
+            // Używamy nowej klasy SqlScriptRunner
+            SqlScriptRunner.executeScript(conn, dbSeederFile);
+        } catch (IOException e) {
+            System.err.println("Nie można wczytać pliku seeder SQL: " + e.getMessage());
+            throw new SQLException("Błąd I/O podczas wypełniania bazy", e);
+        }
+    }
+
+    // --- Zaktualizowane metody CRUD dla Produktów ---
+
+    @Override
+    public void addProduct(Product product) throws SQLException {
+        String sql = "INSERT INTO Products(sku, name, description, id_category, id_base_uom, weight_kg, length_cm, width_cm, height_cm) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            // Zamknięcie istniejącego połączenia, jeśli jest otwarte
-            if (connection != null && !connection.isClosed()) {
-                disconnect();
-            }
-            
-            // Nawiązanie nowego połączenia
-            connection = DriverManager.getConnection(DB_URL);
-            System.out.println("Połączono z bazą danych SQLite: " + DB_URL);
-            
-            // Włączenie obsługi kluczy obcych (ważne dla integralności danych)
-            try (Statement stmt = connection.createStatement()) {
-                stmt.execute("PRAGMA foreign_keys = ON;");
-            }
-            
-        } catch (SQLException e) {
-            System.err.println("Błąd podczas łączenia z bazą danych: " + e.getMessage());
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            System.err.println("Nie znaleziono sterownika SQLite JDBC!");
-            System.err.println("Upewnij się, że dodałeś zależność Maven lub plik JAR do projektu.");
-            e.printStackTrace();
+            pstmt.setString(1, product.sku());
+            pstmt.setString(2, product.name());
+            pstmt.setString(3, product.description());
+            pstmt.setObject(4, product.idCategory()); 
+            pstmt.setInt(5, product.idBaseUom());
+            pstmt.setObject(6, product.weightKg());
+            pstmt.setObject(7, product.lengthCm());
+            pstmt.setObject(8, product.widthCm());
+            pstmt.setObject(9, product.heightCm());
+            pstmt.executeUpdate();
         }
     }
 
     @Override
-    public void disconnect() {
-        if (connection != null) {
-            try {
-                connection.close();
-                System.out.println("Rozłączono z bazą danych SQLite.");
-            } catch (SQLException e) {
-                System.err.println("Błąd podczas rozłączania z bazą danych: " + e.getMessage());
-                e.printStackTrace();
+    public Optional<Product> getProductById(int id) throws SQLException {
+        String sql = "SELECT * FROM Products WHERE id_product = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return Optional.of(mapRowToProduct(rs));
             }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<Product> getProductBySku(String sku) throws SQLException {
+        String sql = "SELECT * FROM Products WHERE sku = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, sku);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return Optional.of(mapRowToProduct(rs));
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public List<Product> getAllProducts() throws SQLException {
+        String sql = "SELECT * FROM Products";
+        List<Product> products = new ArrayList<>();
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                products.add(mapRowToProduct(rs));
+            }
+        }
+        return products;
+    }
+
+    @Override
+    public void updateProduct(Product product) throws SQLException {
+        String sql = """
+            UPDATE Products SET 
+                sku = ?, name = ?, description = ?, id_category = ?, id_base_uom = ?, 
+                weight_kg = ?, length_cm = ?, width_cm = ?, height_cm = ? 
+            WHERE id_product = ?
+        """;
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, product.sku());
+            pstmt.setString(2, product.name());
+            pstmt.setString(3, product.description());
+            pstmt.setObject(4, product.idCategory());
+            pstmt.setInt(5, product.idBaseUom());
+            pstmt.setObject(6, product.weightKg());
+            pstmt.setObject(7, product.lengthCm());
+            pstmt.setObject(8, product.widthCm());
+            pstmt.setObject(9, product.heightCm());
+            pstmt.setInt(10, product.id()); // Klauzula WHERE
+            pstmt.executeUpdate();
         }
     }
 
     @Override
-    public void createInitialSchema() {
-        if (connection == null) {
-            System.err.println("Brak połączenia z bazą danych. Wywołaj connect() przed createInitialSchema().");
-            return;
+    public void deleteProduct(int id) throws SQLException {
+        String sql = "DELETE FROM Products WHERE id_product = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
         }
+    }
 
-        // Tabele są zdefiniowane w tablicy, aby łatwo je tworzyć jedna po drugiej.
-        // Używamy "CREATE TABLE IF NOT EXISTS", aby bezpiecznie uruchamiać tę metodę wielokrotnie.
-        String[] tablesToCreate = {
-            """
-            CREATE TABLE IF NOT EXISTS Products (
-                id_product INTEGER PRIMARY KEY AUTOINCREMENT,
-                sku TEXT UNIQUE NOT NULL,
-                name TEXT NOT NULL,
-                description TEXT
-            );
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS Locations (
-                id_location INTEGER PRIMARY KEY AUTOINCREMENT,
-                location_code TEXT UNIQUE NOT NULL,
-                location_type TEXT NOT NULL CHECK(location_type IN ('STORAGE', 'PICKING', 'RECEIVING_BAY', 'SHIPPING_BAY'))
-            );
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS InventoryStock (
-                id_stock INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_product INTEGER NOT NULL,
-                id_location INTEGER NOT NULL,
-                quantity INTEGER NOT NULL CHECK(quantity >= 0),
-                batch_number TEXT,
-                expiry_date TEXT,
-                FOREIGN KEY (id_product) REFERENCES Products(id_product) ON DELETE CASCADE,
-                FOREIGN KEY (id_location) REFERENCES Locations(id_location) ON DELETE RESTRICT
-            );
-            """,
-            // Poniżej tabele na przyszłość (zgodnie z plikiem założeń)
-            """
-            CREATE TABLE IF NOT EXISTS Users (
-                id_user INTEGER PRIMARY KEY AUTOINCREMENT,
-                login TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                role TEXT NOT NULL CHECK(role IN ('ADMIN', 'OPERATOR'))
-            );
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS WmsOrders (
-                id_order INTEGER PRIMARY KEY AUTOINCREMENT,
-                order_reference TEXT UNIQUE NOT NULL,
-                status TEXT NOT NULL DEFAULT 'NEW' CHECK(status IN ('NEW', 'PICKING', 'PACKED', 'SHIPPED', 'CANCELLED'))
-            );
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS OrderLines (
-                id_line INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_order INTEGER NOT NULL,
-                id_product INTEGER NOT NULL,
-                quantity_ordered INTEGER NOT NULL CHECK(quantity_ordered > 0),
-                FOREIGN KEY (id_order) REFERENCES WmsOrders(id_order) ON DELETE CASCADE,
-                FOREIGN KEY (id_product) REFERENCES Products(id_product) ON DELETE RESTRICT
-            );
-            """,
-             """
-            CREATE TABLE IF NOT EXISTS GoodsReceived (
-                id_receipt INTEGER PRIMARY KEY AUTOINCREMENT,
-                asn_reference TEXT,
-                status TEXT NOT NULL DEFAULT 'EXPECTED' CHECK(status IN ('EXPECTED', 'RECEIVED', 'CANCELLED'))
-            );
-            """,
-             """
-            CREATE TABLE IF NOT EXISTS ReceiptLines (
-                id_line INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_receipt INTEGER NOT NULL,
-                id_product INTEGER NOT NULL,
-                quantity_expected INTEGER NOT NULL,
-                quantity_received INTEGER DEFAULT 0,
-                FOREIGN KEY (id_receipt) REFERENCES GoodsReceived(id_receipt) ON DELETE CASCADE,
-                FOREIGN KEY (id_product) REFERENCES Products(id_product) ON DELETE RESTRICT
-            );
-            """
-        };
+    // --- Nowe metody (do testowania, czy dane się wczytały) ---
 
-        try (Statement stmt = connection.createStatement()) {
-            for (String sql : tablesToCreate) {
-                stmt.execute(sql);
+    @Override
+    public Optional<User> getUserByLogin(String login) throws SQLException {
+        String sql = "SELECT * FROM Users WHERE login = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, login);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return Optional.of(new User(
+                    rs.getInt("id_user"),
+                    rs.getString("login"),
+                    rs.getString("first_name"),
+                    rs.getString("last_name"),
+                    rs.getBoolean("is_active")
+                ));
             }
-            System.out.println("Schemat bazy danych został pomyślnie utworzony (lub już istniał).");
-        } catch (SQLException e) {
-            System.err.println("Błąd podczas tworzenia schematu bazy danych: " + e.getMessage());
-            e.printStackTrace();
         }
+        return Optional.empty();
+    }
+
+    @Override
+    public int getLocationCount() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Locations";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    // --- Prywatna metoda pomocnicza ---
+    
+    private Product mapRowToProduct(ResultSet rs) throws SQLException {
+        return new Product(
+            rs.getInt("id_product"),
+            rs.getString("sku"),
+            rs.getString("name"),
+            rs.getString("description"),
+            (Integer) rs.getObject("id_category"), 
+            rs.getInt("id_base_uom"),
+            (Double) rs.getObject("weight_kg"),
+            (Double) rs.getObject("length_cm"),
+            (Double) rs.getObject("width_cm"),
+            (Double) rs.getObject("height_cm")
+        );
     }
 }

@@ -1,63 +1,35 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
- */
 package com.mycompany.sapo_leyendo.database;
 
+// Importy dla nowych modeli
+import com.mycompany.sapo_leyendo.model.Product;
+import com.mycompany.sapo_leyendo.model.User;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
+
 /**
- * Interfejs definiujący kontrakt dla modułu bazy danych.
- * Dzięki temu w przyszłości będziesz mógł łatwo podmienić SQLite
- * na inną bazę (np. PostgreSQL) tworząc nową klasę implementującą ten interfejs,
- * bez zmiany reszty aplikacji.
- *
- * @author j0now (i Gemini)
+ * ZAKTUALIZOWANY INTERFEJS
+ * Definiuje kontrakt dla operacji bazodanowych w systemie WMS.
  */
 public interface DatabaseInterface {
 
-    /**
-     * Nawiązuje połączenie z bazą danych.
-     */
-    void connect();
+    Connection getConnection() throws SQLException;
+    void initializeDatabase() throws SQLException;
+    void seedDatabase() throws SQLException;
 
-    /**
-     * Zamyka połączenie z bazą danych.
-     */
-    void disconnect();
+    // --- Metody dla Produktów ---
+    void addProduct(Product product) throws SQLException;
+    Optional<Product> getProductById(int id) throws SQLException;
+    Optional<Product> getProductBySku(String sku) throws SQLException;
+    List<Product> getAllProducts() throws SQLException;
+    void updateProduct(Product product) throws SQLException;
+    void deleteProduct(int id) throws SQLException;
 
-    /**
-     * Tworzy początkowy schemat bazy danych (wszystkie tabele),
-     * jeśli jeszcze nie istnieje.
-     */
-    void createInitialSchema();
+    // --- Metody dla Użytkowników (do testowania) ---
+    Optional<User> getUserByLogin(String login) throws SQLException;
 
-    // === Przykłady metod dla modułów logicznych (do implementacji później) ===
-    
-    // Poniższe metody są na razie tylko przykładami.
-    // W miarę rozwoju projektu będziesz dodawać tu więcej metod,
-    // np. do pobierania, aktualizowania i usuwania danych.
-
-    /**
-     * Przykład: Dodaje nowy produkt do katalogu.
-     * (Do zaimplementowania w przyszłości)
-     * @param sku Unikalny kod SKU produktu
-     * @param name Nazwa produktu
-     */
-    // void addProduct(String sku, String name);
-
-    /**
-     * Przykład: Znajduje lokalizację po jej kodzie.
-     * (Do zaimplementowania w przyszłości)
-     * @param locationCode Kod lokalizacji (np. "A-01-01-A")
-     * @return Obiekt reprezentujący lokalizację (np. Twoja klasa POJO Location)
-     */
-    // Object getLocationByCode(String locationCode); // Użyj swojej klasy modelu zamiast Object
-
-    /**
-     * Przykład: Aktualizuje stan magazynowy (serce WMS).
-     * (Do zaimplementowania w przyszłości)
-     * @param productId ID produktu
-     * @param locationId ID lokalizacji
-     * @param quantity Ilość do dodania (lub ujemna, by odjąć)
-     */
-    // boolean updateStock(int productId, int locationId, int quantity);
+    // --- Metody dla Lokacji (do testowania) ---
+    int getLocationCount() throws SQLException;
 }
