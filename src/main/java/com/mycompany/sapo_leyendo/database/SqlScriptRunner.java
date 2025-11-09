@@ -7,6 +7,9 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 /**
  * ZAKTUALIZOWANA KLASA NARZĘDZIOWA
@@ -61,4 +64,43 @@ public class SqlScriptRunner {
         
         System.out.println("Skrypt wykonany pomyślnie (tryb auto-commit).");
     }
+    /**
+     * Wykonuje skrypt SQL z zasobu w classpath (np. /database/plik.sql)
+     */
+    public static void executeScriptFromResource(Connection conn, String resourcePath) throws SQLException, IOException {
+        if (resourcePath == null || resourcePath.isBlank()) {
+            throw new IOException("Podana ścieżka zasobu SQL jest pusta.");
+        }
+
+        System.out.println("Wykonywanie skryptu z zasobu: " + resourcePath);
+
+        try (InputStream in = SqlScriptRunner.class.getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                throw new IOException("Nie znaleziono zasobu SQL: " + resourcePath);
+            }
+
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line).append("\n");
+                }
+            }
+
+            String tempPath = writeTempAndReturnPath(sb.toString());
+
+            try {
+                executeScriptFromResource(conn, tempPath);
+            } finally {
+                Files.deleteIfExists(Paths.get(tempPath));
+            }
+        }
+    }
+
+    private static String writeTempAndReturnPath(String sqlText) throws IOException {
+        var tmp = Files.createTempFile("sql_script_", ".sql");
+        Files.writeString(tmp, sqlText, StandardCharsets.UTF_8);
+        return tmp.toString();
+    }
+
 }

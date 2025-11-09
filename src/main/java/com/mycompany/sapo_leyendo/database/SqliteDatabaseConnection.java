@@ -19,7 +19,7 @@ import java.util.Optional;
  * ZAKTUALIZOWANA Implementacja (Twoja "Realna Baza")
  * Zależna od SqlScriptRunner.java i modeli Product.java/User.java
  */
-public class sqliteDatabaseConnection implements DatabaseInterface {
+public class SqliteDatabaseConnection implements DatabaseInterface {
 
     private final String dbUrl;
     
@@ -28,12 +28,17 @@ public class sqliteDatabaseConnection implements DatabaseInterface {
     // a NetBeans/Maven poprawnie skopiuje te zasoby.
     // Używamy "src/main/java/" jako bazy dla ścieżek
     // (Dostosuj, jeśli Twoje pliki SQL są gdzie indziej, np. w "src/main/resources")
-    private final String dbSchemaFile = "src/main/java/com/mycompany/sapo_leyendo/database/CreateDB_sqlite.sql";
-    private final String dbSeederFile = "src/main/java/com/mycompany/sapo_leyendo/database/FillDatabase_sqlite.sql";
+    private static final String Schema_RES = "/database/CreateDB_sqlite.sql";
+    private static final String SEED_RES = "/database/FillDatabase_sqlite.sql";
 
 
-    public sqliteDatabaseConnection(String dbName) {
-        this.dbUrl = "jdbc:sqlite:" + dbName;
+    public SqliteDatabaseConnection(String dbName) {
+        // Stworzyłem ci tu katalog na plik bazy, żeby nie lądował luzem.
+        java.io.File dataDir = new java.io.File("data");
+        if (!dataDir.exists()){
+            dataDir.mkdirs();
+        }
+        this.dbUrl = "jdbc:sqlite:data/" + dbName;
     }
 
     @Override
@@ -54,7 +59,7 @@ public class sqliteDatabaseConnection implements DatabaseInterface {
     public void initializeDatabase() throws SQLException {
         try (Connection conn = getConnection()) {
             // Używamy nowej klasy SqlScriptRunner
-            SqlScriptRunner.executeScript(conn, dbSchemaFile);
+            SqlScriptRunner.executeScriptFromResource(conn, Schema_RES);
         } catch (IOException e) {
             System.err.println("Nie można wczytać pliku schema SQL: " + e.getMessage());
             throw new SQLException("Błąd I/O podczas inicjalizacji bazy", e);
@@ -68,7 +73,7 @@ public class sqliteDatabaseConnection implements DatabaseInterface {
     public void seedDatabase() throws SQLException {
         try (Connection conn = getConnection()) {
             // Używamy nowej klasy SqlScriptRunner
-            SqlScriptRunner.executeScript(conn, dbSeederFile);
+            SqlScriptRunner.executeScriptFromResource(conn, SEED_RES);
         } catch (IOException e) {
             System.err.println("Nie można wczytać pliku seeder SQL: " + e.getMessage());
             throw new SQLException("Błąd I/O podczas wypełniania bazy", e);

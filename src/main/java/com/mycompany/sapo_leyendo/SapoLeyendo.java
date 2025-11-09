@@ -2,7 +2,7 @@ package com.mycompany.sapo_leyendo;
 
 // Poprawione importy, aby pasowały do Twojej struktury
 import com.mycompany.sapo_leyendo.database.DatabaseInterface;
-import com.mycompany.sapo_leyendo.database.sqliteDatabaseConnection;
+import com.mycompany.sapo_leyendo.database.SqliteDatabaseConnection;
 import com.mycompany.sapo_leyendo.model.Product;
 import com.mycompany.sapo_leyendo.model.User;
 
@@ -13,7 +13,7 @@ import java.util.Optional;
  * ZAKTUALIZOWANA klasa główna (zmieniona nazwa z Main).
  * Pokazuje, jak użyć interfejsu do stworzenia i wypełnienia bazy.
  */
-public class Sapo_leyendo { // Zmieniona nazwa klasy
+public class SapoLeyendo { // Zmieniona nazwa klasy
     
     private static final String DB_NAME = "sapo_wms_main.db";
     
@@ -21,7 +21,7 @@ public class Sapo_leyendo { // Zmieniona nazwa klasy
         try {
             // 1. Używamy tej samej, oddzielonej logiki
             // Zwróć uwagę na zmianę nazwy klasy implementacji
-            DatabaseInterface db = new sqliteDatabaseConnection(DB_NAME);
+            DatabaseInterface db = new SqliteDatabaseConnection(DB_NAME);
             
             // 2. Tworzymy tabele (wykonuje CreateDB_sqlite.sql)
             System.out.println("Inicjalizacja bazy danych...");
