@@ -28,6 +28,8 @@ DELETE FROM WmsOrders;
 DELETE FROM GoodsReceived;
 DELETE FROM Products;
 DELETE FROM ProductCategories;
+DELETE FROM RolePermissions;
+DELETE FROM Permissions;
 DELETE FROM UserRoles;
 DELETE FROM Users;
 DELETE FROM Roles;
@@ -53,6 +55,30 @@ INSERT INTO Roles (id_role, role_name, description) VALUES
 (3, 'RECEIVER', 'Magazynier - obsługa strefy przyjęć'),
 (4, 'PICKER', 'Magazynier - kompletacja zamówień'),
 (5, 'PACKER', 'Magazynier - pakowanie i obsługa strefy wydań');
+
+-- Tabela `Permissions` (Uprawnienia)
+INSERT INTO Permissions (id_permission, name, module, description) VALUES
+(1, 'INBOUND_READ', 'INBOUND', 'Podgląd przyjęć'),
+(2, 'INBOUND_WRITE', 'INBOUND', 'Tworzenie i edycja przyjęć'),
+(3, 'OUTBOUND_READ', 'OUTBOUND', 'Podgląd wydań'),
+(4, 'OUTBOUND_WRITE', 'OUTBOUND', 'Tworzenie i edycja wydań'),
+(5, 'INVENTORY_READ', 'INVENTORY', 'Podgląd stanów magazynowych'),
+(6, 'INVENTORY_ADJUST', 'INVENTORY', 'Korekty stanów magazynowych'),
+(7, 'REPORT_VIEW', 'REPORTING', 'Dostęp do raportów i dashboardu'),
+(8, 'USER_MANAGEMENT', 'ADMIN', 'Zarządzanie użytkownikami');
+
+-- Tabela `RolePermissions` (Uprawnienia Ról)
+INSERT INTO RolePermissions (id_role, id_permission) VALUES
+-- ADMIN: Wszystko
+(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8),
+-- MANAGER: Wszystko do odczytu + raporty + korekty
+(2, 1), (2, 3), (2, 5), (2, 6), (2, 7),
+-- RECEIVER: Tylko Inbound
+(3, 1), (3, 2), (3, 5),
+-- PICKER: Tylko Outbound (odczyt) + Inventory (odczyt)
+(4, 3), (4, 5),
+-- PACKER: Tylko Outbound
+(4, 3), (4, 4);
 
 -- Tabela `UnitOfMeasure` (Jednostki Miary)
 INSERT INTO UnitOfMeasure (id_uom, code, name) VALUES

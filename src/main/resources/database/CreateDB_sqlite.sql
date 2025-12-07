@@ -44,6 +44,26 @@ CREATE TABLE UserRoles (
     FOREIGN KEY (id_role) REFERENCES Roles(id_role) ON DELETE CASCADE
 );
 
+DROP TABLE IF EXISTS RolePermissions;
+DROP TABLE IF EXISTS Permissions;
+
+-- Tabela `Permissions` (Uprawnienia/Transakcje)
+CREATE TABLE Permissions (
+    id_permission INTEGER PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL, -- np. 'INBOUND_READ', 'INBOUND_WRITE'
+    module VARCHAR(50) NOT NULL,       -- np. 'INBOUND', 'OUTBOUND'
+    description TEXT
+);
+
+-- Tabela `RolePermissions` (Uprawnienia Ról)
+CREATE TABLE RolePermissions (
+    id_role INTEGER NOT NULL,
+    id_permission INTEGER NOT NULL,
+    PRIMARY KEY (id_role, id_permission),
+    FOREIGN KEY (id_role) REFERENCES Roles(id_role) ON DELETE CASCADE,
+    FOREIGN KEY (id_permission) REFERENCES Permissions(id_permission) ON DELETE CASCADE
+);
+
 
 -- ########################################
 -- SEKCJA 2: RDZEŃ - PRODUKTY I LOKALIZACJE

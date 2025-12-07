@@ -1,6 +1,6 @@
 package com.mycompany.sapo_leyendo.config;
 
-import com.mycompany.sapo_leyendo.service.CustomUserDetailsService;
+import com.mycompany.sapo_leyendo.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

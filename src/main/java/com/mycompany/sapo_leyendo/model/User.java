@@ -31,4 +31,12 @@ public class User {
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "UserRoles",
+        joinColumns = @JoinColumn(name = "id_user"),
+        inverseJoinColumns = @JoinColumn(name = "id_role")
+    )
+    private java.util.Set<Role> roles;
 }

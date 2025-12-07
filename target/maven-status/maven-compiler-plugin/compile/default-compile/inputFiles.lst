@@ -1,8 +1,8 @@
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\AuthController.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repository\ProductRepository.java
-C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\service\CustomUserDetailsService.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\service\InboundService.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Product.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Permission.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\dto\UserInfo.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Location.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\service\ReportService.java
@@ -14,6 +14,7 @@ C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repo
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Inventory.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\UserController.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\service\LocationService.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Role.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\ReportController.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\InboundOrder.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\OutboundOrder.java
@@ -27,6 +28,7 @@ C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repo
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\InventoryController.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\service\OutboundService.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\config\SecurityConfig.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\security\CustomUserDetailsService.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\service\ProductService.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\InboundOrderItem.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\LocationController.java

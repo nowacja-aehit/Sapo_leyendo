@@ -18,6 +18,8 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -46,7 +48,23 @@ public class AuthController {
 
         User user = userRepository.findByLogin(loginRequest.getUsername()).orElseThrow();
         
-        return ResponseEntity.ok(new UserInfo(user.getId(), user.getLogin(), user.getFirstName(), user.getLastName()));
+        var roles = user.getRoles().stream()
+                .map(role -> role.getRoleName())
+                .collect(Collectors.toSet());
+
+        var permissions = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> permission.getName())
+                .collect(Collectors.toSet());
+
+        return ResponseEntity.ok(new UserInfo(
+            user.getId(), 
+            user.getLogin(), 
+            user.getFirstName(), 
+            user.getLastName(),
+            roles,
+            permissions
+        ));
     }
 
     @PostMapping("/logout")
@@ -68,6 +86,23 @@ public class AuthController {
 
         String username = authentication.getName();
         User user = userRepository.findByLogin(username).orElseThrow();
-        return ResponseEntity.ok(new UserInfo(user.getId(), user.getLogin(), user.getFirstName(), user.getLastName()));
+        
+        var roles = user.getRoles().stream()
+                .map(role -> role.getRoleName())
+                .collect(Collectors.toSet());
+
+        var permissions = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> permission.getName())
+                .collect(Collectors.toSet());
+
+        return ResponseEntity.ok(new UserInfo(
+            user.getId(), 
+            user.getLogin(), 
+            user.getFirstName(), 
+            user.getLastName(),
+            roles,
+            permissions
+        ));
     }
 }
