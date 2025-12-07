@@ -27,6 +27,12 @@ public class InboundOrder {
 
     @Column(name = "expected_date")
     private LocalDate expectedDate;
+
+    @Column(name = "supplier_id")
+    private Long supplierId;
+
+    @Column(name = "dock_id")
+    private Integer dockId;
     
     @OneToMany(mappedBy = "inboundOrder", cascade = CascadeType.ALL)
     private List<InboundOrderItem> items;

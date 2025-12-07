@@ -1,6 +1,8 @@
 package com.mycompany.sapo_leyendo.controller;
 
+import com.mycompany.sapo_leyendo.dto.ReceiveItemRequest;
 import com.mycompany.sapo_leyendo.model.InboundOrder;
+import com.mycompany.sapo_leyendo.model.Receipt;
 import com.mycompany.sapo_leyendo.service.InboundService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -34,5 +36,17 @@ public class InboundController {
             order.getItems().forEach(item -> item.setInboundOrder(order));
         }
         return inboundService.saveInboundOrder(order);
+    }
+
+    @PostMapping("/receive")
+    public ResponseEntity<Receipt> receiveItem(@RequestBody ReceiveItemRequest request) {
+        Receipt receipt = inboundService.receiveItem(
+                request.getInboundOrderItemId(),
+                request.getLpn(),
+                request.getQuantity(),
+                request.getOperatorId(),
+                request.getDamageCode()
+        );
+        return ResponseEntity.ok(receipt);
     }
 }

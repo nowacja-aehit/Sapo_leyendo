@@ -32,4 +32,7 @@ public class InboundOrderItem {
 
     @Column(name = "quantity_received", nullable = false)
     private Integer quantityReceived = 0;
+
+    @Column(name = "batch_number")
+    private String batchNumber;
 }

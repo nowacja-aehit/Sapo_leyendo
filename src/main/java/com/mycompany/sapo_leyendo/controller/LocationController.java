@@ -1,6 +1,8 @@
 package com.mycompany.sapo_leyendo.controller;
 
 import com.mycompany.sapo_leyendo.model.Location;
+import com.mycompany.sapo_leyendo.model.LocationType;
+import com.mycompany.sapo_leyendo.model.Zone;
 import com.mycompany.sapo_leyendo.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -37,5 +39,25 @@ public class LocationController {
     public ResponseEntity<Void> deleteLocation(@PathVariable Integer id) {
         locationService.deleteLocation(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/zones")
+    public List<Zone> getAllZones() {
+        return locationService.getAllZones();
+    }
+
+    @PostMapping("/zones")
+    public Zone createZone(@RequestBody Zone zone) {
+        return locationService.saveZone(zone);
+    }
+
+    @GetMapping("/types")
+    public List<LocationType> getAllLocationTypes() {
+        return locationService.getAllLocationTypes();
+    }
+
+    @PostMapping("/types")
+    public LocationType createLocationType(@RequestBody LocationType locationType) {
+        return locationService.saveLocationType(locationType);
     }
 }

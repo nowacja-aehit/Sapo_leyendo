@@ -17,6 +17,8 @@ interface Inventory {
   product: Product
   location: Location
   quantity: number
+  lpn: string
+  status: string
 }
 
 export default function InventoryList() {
@@ -47,20 +49,26 @@ export default function InventoryList() {
         <thead className="table-dark">
           <tr>
             <th>ID</th>
-            <th>Product SKU</th>
-            <th>Product Name</th>
+            <th>LPN</th>
+            <th>Product</th>
             <th>Location</th>
             <th>Quantity</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
           {inventory.map(item => (
             <tr key={item.id}>
               <td>{item.id}</td>
-              <td>{item.product.sku}</td>
-              <td>{item.product.name}</td>
+              <td>{item.lpn || '-'}</td>
+              <td>{item.product.sku} - {item.product.name}</td>
               <td>{item.location.name}</td>
               <td>{item.quantity}</td>
+              <td>
+                <span className={`badge ${item.status === 'AVAILABLE' ? 'bg-success' : 'bg-warning'}`}>
+                  {item.status}
+                </span>
+              </td>
             </tr>
           ))}
         </tbody>

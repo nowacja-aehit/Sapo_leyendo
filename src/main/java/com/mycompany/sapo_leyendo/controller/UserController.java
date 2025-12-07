@@ -1,5 +1,6 @@
 package com.mycompany.sapo_leyendo.controller;
 
+import com.mycompany.sapo_leyendo.dto.UserRequest;
 import com.mycompany.sapo_leyendo.model.User;
 import com.mycompany.sapo_leyendo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +33,15 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.createUser(user);
+    public User createUser(@RequestBody UserRequest userRequest) {
+        return userService.createUser(userRequest);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Integer id, @RequestBody UserRequest userRequest) {
+        return userService.updateUser(id, userRequest)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
