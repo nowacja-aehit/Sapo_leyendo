@@ -1,25 +1,45 @@
 package com.mycompany.sapo_leyendo.model;
 
-/**
- * NOWY Model Produktu (jako `record` Java).
- * Pola pasują do tabeli `Products` z Twojego pliku SQL.
- */
-public record Product(
-    int id,
-    String sku,
-    String name,
-    String description,
-    Integer idCategory, // Może być NULL
-    int idBaseUom,
-    Double weightKg, // Może być NULL
-    Double lengthCm,
-    Double widthCm,
-    Double heightCm
-) {
-    /**
-     * Dodatkowy konstruktor do tworzenia nowych produktów (bez ID).
-     */
-    public Product(String sku, String name, String description, Integer idCategory, int idBaseUom, Double weightKg, Double lengthCm, Double widthCm, Double heightCm) {
-        this(0, sku, name, description, idCategory, idBaseUom, weightKg, lengthCm, widthCm, heightCm);
-    }
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "Products")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Product {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_product")
+    private Integer id;
+
+    @Column(unique = true, nullable = false)
+    private String sku;
+
+    @Column(nullable = false)
+    private String name;
+
+    private String description;
+
+    @Column(name = "id_category")
+    private Integer idCategory;
+
+    @Column(name = "id_base_uom", nullable = false)
+    private Integer idBaseUom;
+
+    @Column(name = "weight_kg")
+    private Double weightKg;
+
+    @Column(name = "length_cm")
+    private Double lengthCm;
+
+    @Column(name = "width_cm")
+    private Double widthCm;
+
+    @Column(name = "height_cm")
+    private Double heightCm;
 }
