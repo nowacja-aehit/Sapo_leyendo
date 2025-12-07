@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 
 interface Product {
@@ -54,6 +55,7 @@ export default function InboundList() {
             <th>Status</th>
             <th>Expected Date</th>
             <th>Items Count</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -68,6 +70,11 @@ export default function InboundList() {
               </td>
               <td>{order.expectedDate}</td>
               <td>{order.items ? order.items.length : 0}</td>
+              <td>
+                <Link to={`/inbound/${order.id}/receive`} className="btn btn-sm btn-primary">
+                  Receive
+                </Link>
+              </td>
             </tr>
           ))}
         </tbody>

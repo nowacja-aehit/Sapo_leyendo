@@ -10,4 +10,5 @@ import java.util.List;
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     List<Inventory> findByProductId(Integer productId);
     List<Inventory> findByLocationId(Integer locationId);
+    java.util.Optional<Inventory> findByLpn(String lpn);
 }

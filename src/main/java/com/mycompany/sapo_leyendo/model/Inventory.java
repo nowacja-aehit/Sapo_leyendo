@@ -27,4 +27,14 @@ public class Inventory {
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
+
+    @Column(name = "lpn")
+    private String lpn;
+
+    @Column(name = "batch_number")
+    private String batchNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private InventoryStatus status = InventoryStatus.AVAILABLE;
 }

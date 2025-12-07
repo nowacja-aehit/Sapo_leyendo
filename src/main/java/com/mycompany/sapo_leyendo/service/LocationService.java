@@ -1,7 +1,11 @@
 package com.mycompany.sapo_leyendo.service;
 
 import com.mycompany.sapo_leyendo.model.Location;
+import com.mycompany.sapo_leyendo.model.LocationType;
+import com.mycompany.sapo_leyendo.model.Zone;
 import com.mycompany.sapo_leyendo.repository.LocationRepository;
+import com.mycompany.sapo_leyendo.repository.LocationTypeRepository;
+import com.mycompany.sapo_leyendo.repository.ZoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +17,12 @@ public class LocationService {
 
     @Autowired
     private LocationRepository locationRepository;
+
+    @Autowired
+    private ZoneRepository zoneRepository;
+
+    @Autowired
+    private LocationTypeRepository locationTypeRepository;
 
     public List<Location> getAllLocations() {
         return locationRepository.findAll();
@@ -28,5 +38,23 @@ public class LocationService {
 
     public void deleteLocation(Integer id) {
         locationRepository.deleteById(id);
+    }
+
+    // Zone methods
+    public List<Zone> getAllZones() {
+        return zoneRepository.findAll();
+    }
+
+    public Zone saveZone(Zone zone) {
+        return zoneRepository.save(zone);
+    }
+
+    // LocationType methods
+    public List<LocationType> getAllLocationTypes() {
+        return locationTypeRepository.findAll();
+    }
+
+    public LocationType saveLocationType(LocationType locationType) {
+        return locationTypeRepository.save(locationType);
     }
 }

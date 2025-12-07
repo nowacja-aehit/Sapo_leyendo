@@ -20,11 +20,25 @@ public class Location {
     @Column(unique = true, nullable = false)
     private String name; // e.g., "A-01-01"
 
-    @Column(name = "zone")
-    private String zone; // e.g., "Zone A"
+    @ManyToOne
+    @JoinColumn(name = "id_zone")
+    private Zone zone;
 
-    @Column(name = "type")
-    private String type; // e.g., "SHELF", "FLOOR"
+    @ManyToOne
+    @JoinColumn(name = "id_location_type")
+    private LocationType locationType;
+
+    private String barcode;
+    private String aisle;
+    private String rack;
+    private String level;
+    private String bin;
+
+    @Column(name = "pick_sequence")
+    private Integer pickSequence;
+
+    @Enumerated(EnumType.STRING)
+    private LocationStatus status = LocationStatus.ACTIVE;
 
     @Column(name = "is_active")
     private boolean isActive = true;

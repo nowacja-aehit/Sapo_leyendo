@@ -1,8 +1,10 @@
 package com.mycompany.sapo_leyendo.controller;
 
 import com.mycompany.sapo_leyendo.model.Inventory;
+import com.mycompany.sapo_leyendo.model.MoveTask;
 import com.mycompany.sapo_leyendo.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,5 +30,26 @@ public class InventoryController {
     @GetMapping("/location/{locationId}")
     public List<Inventory> getInventoryByLocation(@PathVariable Integer locationId) {
         return inventoryService.getInventoryByLocation(locationId);
+    }
+
+    @PostMapping("/putaway/{receiptId}")
+    public ResponseEntity<MoveTask> createPutAwayTask(@PathVariable Integer receiptId) {
+        try {
+            MoveTask task = inventoryService.createPutAwayTask(receiptId);
+            return ResponseEntity.ok(task);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/tasks/pending")
+    public List<MoveTask> getPendingTasks() {
+        return inventoryService.getPendingTasks();
+    }
+
+    @PostMapping("/tasks/{taskId}/complete")
+    public ResponseEntity<Void> completeTask(@PathVariable Integer taskId) {
+        inventoryService.completeTask(taskId);
+        return ResponseEntity.ok().build();
     }
 }
