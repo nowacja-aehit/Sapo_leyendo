@@ -84,4 +84,34 @@ public class QualityControlService {
         plan.setSteps(steps);
         return testPlanRepository.save(plan);
     }
+
+    /**
+     * Calculates sample size based on simplified ISO 2859-1 (General Inspection Level II)
+     * This is a mock implementation of the standard table.
+     */
+    public int calculateSampleSize(int lotSize) {
+        if (lotSize <= 0) return 0;
+        if (lotSize <= 8) return 2;
+        if (lotSize <= 15) return 3;
+        if (lotSize <= 25) return 5;
+        if (lotSize <= 50) return 8;
+        if (lotSize <= 90) return 13;
+        if (lotSize <= 150) return 20;
+        if (lotSize <= 280) return 32;
+        if (lotSize <= 500) return 50;
+        if (lotSize <= 1200) return 80;
+        if (lotSize <= 3200) return 125;
+        if (lotSize <= 10000) return 200;
+        return 315; // > 10000
+    }
+
+    public boolean shouldInspect(Integer productId, Integer supplierId) {
+        // Logic to determine if inspection is needed
+        // 1. Check if product is flagged for QC
+        // 2. Check if supplier is flagged
+        // 3. Random sampling (e.g. 10%)
+        
+        // Mock implementation
+        return Math.random() < 0.1; // 10% chance
+    }
 }

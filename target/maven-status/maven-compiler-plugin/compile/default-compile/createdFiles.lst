@@ -25,19 +25,18 @@ com\mycompany\sapo_leyendo\controller\OutboundController.class
 com\mycompany\sapo_leyendo\model\InspectionSourceType.class
 com\mycompany\sapo_leyendo\SapoApplication.class
 com\mycompany\sapo_leyendo\model\InspectionResult.class
-com\mycompany\sapo_leyendo\controller\ShippingController.class
 com\mycompany\sapo_leyendo\repository\ReturnItemRepository.class
 com\mycompany\sapo_leyendo\dto\UserRequest.class
 com\mycompany\sapo_leyendo\model\PickListStatus.class
 com\mycompany\sapo_leyendo\model\InboundOrder.class
 com\mycompany\sapo_leyendo\repository\ProductRepository.class
+com\mycompany\sapo_leyendo\repository\DockAppointmentRepository.class
 com\mycompany\sapo_leyendo\repository\ZoneRepository.class
 com\mycompany\sapo_leyendo\repository\KpiMetricRepository.class
 com\mycompany\sapo_leyendo\model\PickListType.class
 com\mycompany\sapo_leyendo\model\RmaStatus.class
 com\mycompany\sapo_leyendo\repository\CarrierRepository.class
 com\mycompany\sapo_leyendo\repository\RoleRepository.class
-com\mycompany\sapo_leyendo\service\ShippingService.class
 com\mycompany\sapo_leyendo\service\ReportService.class
 com\mycompany\sapo_leyendo\model\LoadStatus.class
 com\mycompany\sapo_leyendo\model\InboundOrderItem.class
@@ -50,7 +49,6 @@ com\mycompany\sapo_leyendo\repository\PackingStationRepository.class
 com\mycompany\sapo_leyendo\repository\RmaRequestRepository.class
 com\mycompany\sapo_leyendo\repository\StockCountSessionRepository.class
 com\mycompany\sapo_leyendo\model\TransportLoad.class
-com\mycompany\sapo_leyendo\controller\PackingController.class
 com\mycompany\sapo_leyendo\service\ReturnsService.class
 com\mycompany\sapo_leyendo\model\Role.class
 com\mycompany\sapo_leyendo\model\AuditLog.class
@@ -70,7 +68,6 @@ com\mycompany\sapo_leyendo\security\CustomUserDetailsService.class
 com\mycompany\sapo_leyendo\model\KpiMetric.class
 com\mycompany\sapo_leyendo\repository\ParcelRepository.class
 com\mycompany\sapo_leyendo\repository\PackingMaterialRepository.class
-com\mycompany\sapo_leyendo\service\PackingService.class
 com\mycompany\sapo_leyendo\model\Location.class
 com\mycompany\sapo_leyendo\model\ShipmentStatus.class
 com\mycompany\sapo_leyendo\repository\NonConformanceReportRepository.class
@@ -97,6 +94,7 @@ com\mycompany\sapo_leyendo\dto\LoginRequest.class
 com\mycompany\sapo_leyendo\model\OutboundOrder.class
 com\mycompany\sapo_leyendo\repository\GoodsReceivedRepository.class
 com\mycompany\sapo_leyendo\config\SecurityConfig.class
+com\mycompany\sapo_leyendo\model\DockAppointment.class
 com\mycompany\sapo_leyendo\repository\LocationRepository.class
 com\mycompany\sapo_leyendo\controller\SpaController.class
 com\mycompany\sapo_leyendo\model\VisualizationType.class
@@ -124,7 +122,6 @@ com\mycompany\sapo_leyendo\model\MoveTaskType.class
 com\mycompany\sapo_leyendo\model\StockCountStatus.class
 com\mycompany\sapo_leyendo\service\InventoryService.class
 com\mycompany\sapo_leyendo\dto\RoleRequest.class
-com\mycompany\sapo_leyendo\service\PickingService.class
 com\mycompany\sapo_leyendo\model\PackingMaterial.class
 com\mycompany\sapo_leyendo\repository\TestPlanRepository.class
 com\mycompany\sapo_leyendo\service\LocationService.class

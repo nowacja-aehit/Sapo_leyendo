@@ -108,4 +108,36 @@ public class PackingService {
         
         return shipmentRepository.save(shipment);
     }
+
+    /**
+     * Suggests the best packing material based on total volume of products.
+     * Simplified Cartonization Logic.
+     */
+    public PackingMaterial suggestPackingMaterial(List<Product> products) {
+        double totalVolume = 0.0;
+        for (Product p : products) {
+            // Assuming Product has dimensions, if not we use a default or skip
+            // Let's assume we have a getVolume() method or calculate it
+            // For now, we mock it as 1.0 per unit if dimensions missing
+            totalVolume += 1.0; 
+        }
+
+        // Find smallest box that fits the volume
+        // In real world, we need 3D bin packing algorithm.
+        // Here we just compare volume.
+        List<PackingMaterial> materials = packingMaterialRepository.findAll();
+        
+        double finalVolume = totalVolume;
+        return materials.stream()
+                .filter(m -> calculateVolume(m) >= finalVolume)
+                .sorted((m1, m2) -> Double.compare(calculateVolume(m1), calculateVolume(m2)))
+                .findFirst()
+                .orElse(null); // No box fits
+    }
+
+    private double calculateVolume(PackingMaterial m) {
+        // Assuming dimensions are stored in a way we can calculate volume
+        // For this mock, we return a dummy value based on ID or name
+        return 100.0; 
+    }
 }

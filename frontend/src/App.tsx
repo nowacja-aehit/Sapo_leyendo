@@ -14,6 +14,10 @@ import InboundList from './components/InboundList'
 import InboundReceive from './components/InboundReceive'
 import OutboundList from './components/OutboundList'
 import ReportDashboard from './components/ReportDashboard'
+import PickingDashboard from './components/PickingDashboard'
+import PackingStation from './components/PackingStation'
+import ShippingDock from './components/ShippingDock'
+import QualityControlStation from './components/QualityControlStation'
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth()
@@ -71,6 +75,10 @@ function NavBar() {
         {hasPermission('OUTBOUND_READ') && (
           <Link className={`nav-link ${isActive('/outbound')}`} to="/outbound">Outbound</Link>
         )}
+        <Link className={`nav-link ${isActive('/picking')}`} to="/picking">Picking</Link>
+        <Link className={`nav-link ${isActive('/packing')}`} to="/packing">Packing</Link>
+        <Link className={`nav-link ${isActive('/shipping')}`} to="/shipping">Shipping</Link>
+        <Link className={`nav-link ${isActive('/qc')}`} to="/qc">QC</Link>
       </nav>
     </header>
   )
@@ -156,6 +164,26 @@ function AppContent() {
           <Route path="/outbound" element={
             <PrivateRoute>
               <OutboundList />
+            </PrivateRoute>
+          } />
+          <Route path="/picking" element={
+            <PrivateRoute>
+              <PickingDashboard />
+            </PrivateRoute>
+          } />
+          <Route path="/packing" element={
+            <PrivateRoute>
+              <PackingStation />
+            </PrivateRoute>
+          } />
+          <Route path="/shipping" element={
+            <PrivateRoute>
+              <ShippingDock />
+            </PrivateRoute>
+          } />
+          <Route path="/qc" element={
+            <PrivateRoute>
+              <QualityControlStation />
             </PrivateRoute>
           } />
         </Routes>
