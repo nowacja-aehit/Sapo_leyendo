@@ -7,13 +7,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 class SapoApplicationTests {
 
     @Autowired
@@ -27,10 +32,12 @@ class SapoApplicationTests {
     }
 
     @Test
+    @WithMockUser
     void shouldReturnProducts() throws Exception {
         // Given
+        String sku = "TEST-SKU-" + UUID.randomUUID();
         Product product = new Product();
-        product.setSku("TEST-SKU-1");
+        product.setSku(sku);
         product.setName("Test Product");
         product.setIdBaseUom(1);
         productRepository.save(product);
@@ -39,6 +46,6 @@ class SapoApplicationTests {
         mockMvc.perform(get("/api/products")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.sku == 'TEST-SKU-1')].name").value("Test Product"));
+                .andExpect(jsonPath("$[?(@.sku == '" + sku + "')].name").value("Test Product"));
     }
 }

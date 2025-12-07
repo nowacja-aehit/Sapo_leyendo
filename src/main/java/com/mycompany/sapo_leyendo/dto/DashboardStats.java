@@ -1,0 +1,16 @@
+package com.mycompany.sapo_leyendo.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class DashboardStats {
+    private long totalProducts;
+    private long totalLocations;
+    private long totalInventoryItems;
+    private long totalInboundOrders;
+    private long totalOutboundOrders;
+}

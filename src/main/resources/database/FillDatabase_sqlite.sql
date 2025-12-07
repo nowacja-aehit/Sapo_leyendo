@@ -107,16 +107,16 @@ INSERT INTO ProductCategories (id_category, name, parent_category_id) VALUES
 
 -- Tabela `Users` (Użytkownicy) - 10 rekordów (id_user będzie AUTOINCREMENT)
 INSERT INTO Users (login, password_hash, first_name, last_name, is_active) VALUES
-('admin', '$2a$10$3...hash...', 'Adam', 'Min', 1),
-('manager', '$2a$10$3...hash...', 'Marta', 'Nager', 1),
-('jkowalski', '$2a$10$3...hash...', 'Jan', 'Kowalski', 1),
-('anowak', '$2a$10$3...hash...', 'Anna', 'Nowak', 1),
-('pzielinski', '$2a$10$3...hash...', 'Piotr', 'Zieliński', 1),
-('kwisniewska', '$2a$10$3...hash...', 'Katarzyna', 'Wiśniewska', 1),
-('mwojcik', '$2a$10$3...hash...', 'Marek', 'Wójcik', 1),
-('tkaminski', '$2a$10$3...hash...', 'Tomasz', 'Kamiński', 1),
-('olewandowska', '$2a$10$3...hash...', 'Olga', 'Lewandowska', 1),
-('jnowicki', '$2a$10$3...hash...', 'Janusz', 'Nowicki', 0); -- Nieaktywny
+('admin', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3.cfwC.xOpC.w.1xovoto9G5W6Qtk5e', 'Adam', 'Min', 1), -- password: password
+('manager', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3.cfwC.xOpC.w.1xovoto9G5W6Qtk5e', 'Marta', 'Nager', 1),
+('jkowalski', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3.cfwC.xOpC.w.1xovoto9G5W6Qtk5e', 'Jan', 'Kowalski', 1),
+('anowak', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3.cfwC.xOpC.w.1xovoto9G5W6Qtk5e', 'Anna', 'Nowak', 1),
+('pzielinski', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3.cfwC.xOpC.w.1xovoto9G5W6Qtk5e', 'Piotr', 'Zieliński', 1),
+('kwisniewska', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3.cfwC.xOpC.w.1xovoto9G5W6Qtk5e', 'Katarzyna', 'Wiśniewska', 1),
+('mwojcik', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3.cfwC.xOpC.w.1xovoto9G5W6Qtk5e', 'Marek', 'Wójcik', 1),
+('tkaminski', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3.cfwC.xOpC.w.1xovoto9G5W6Qtk5e', 'Tomasz', 'Kamiński', 1),
+('olewandowska', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3.cfwC.xOpC.w.1xovoto9G5W6Qtk5e', 'Olga', 'Lewandowska', 1),
+('jnowicki', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3.cfwC.xOpC.w.1xovoto9G5W6Qtk5e', 'Janusz', 'Nowicki', 0); -- Nieaktywny
 
 -- ########################################
 -- SEKCJA 2: TABELE Z ZALEŻNOŚCIAMI (POZIOM 1)
