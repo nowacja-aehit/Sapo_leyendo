@@ -1,0 +1,9 @@
+com\mycompany\sapo_leyendo\repository\UserRepository.class
+com\mycompany\sapo_leyendo\controller\ProductController.class
+com\mycompany\sapo_leyendo\SapoApplication.class
+com\mycompany\sapo_leyendo\controller\UserController.class
+com\mycompany\sapo_leyendo\service\ProductService.class
+com\mycompany\sapo_leyendo\model\Product.class
+com\mycompany\sapo_leyendo\service\UserService.class
+com\mycompany\sapo_leyendo\repository\ProductRepository.class
+com\mycompany\sapo_leyendo\model\User.class
