@@ -84,13 +84,7 @@ public class ShippingService {
 
         for (Shipment shipment : shipments) {
             shipment.setStatus(ShipmentStatus.SHIPPED);
-            shipment.setShippedAt(LocalDateTime.now()); // Assuming field exists or needs to be added? 
-            // Wait, I need to check if shippedAt exists in Shipment entity. 
-            // Based on SQL it does: shipped_at TEXT NULL
-            // Based on my read of Shipment.java earlier, it was NOT in the class.
-            // I should add it or ignore it. Let's check Shipment.java again mentally.
-            // I read it in previous turn, it had: id, outboundOrder, carrierId, trackingNumber, status, totalWeightKg, parcels.
-            // It did NOT have shippedAt. I should add it to Shipment.java to be consistent.
+            shipment.setShippedAt(LocalDateTime.now()); 
             
             totalWeight += (shipment.getTotalWeightKg() != null ? shipment.getTotalWeightKg() : 0.0);
             totalParcels += (shipment.getParcels() != null ? shipment.getParcels().size() : 0);
@@ -117,5 +111,19 @@ public class ShippingService {
         manifest.setCarrierManifestId(UUID.randomUUID().toString()); // Mock generation
 
         return manifestRepository.save(manifest);
+    }
+
+    /**
+     * Rate Shopping Logic (Mock)
+     * Finds the cheapest carrier for a given shipment.
+     */
+    public Carrier findBestCarrier(Double weight, String destinationZip) {
+        List<Carrier> carriers = carrierRepository.findAll();
+        
+        // Mock logic: Randomly select one or pick based on simple rule
+        // Real logic would call Carrier APIs
+        return carriers.stream()
+                .findAny()
+                .orElseThrow(() -> new RuntimeException("No carriers available"));
     }
 }

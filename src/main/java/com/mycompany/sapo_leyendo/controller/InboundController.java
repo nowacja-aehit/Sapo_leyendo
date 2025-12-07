@@ -49,4 +49,25 @@ public class InboundController {
         );
         return ResponseEntity.ok(receipt);
     }
+
+    @PostMapping("/appointments")
+    public ResponseEntity<com.mycompany.sapo_leyendo.model.DockAppointment> scheduleDock(
+            @RequestParam Integer inboundOrderId,
+            @RequestParam Integer dockId,
+            @RequestParam String startTime,
+            @RequestParam String endTime,
+            @RequestParam String carrierName) {
+        return ResponseEntity.ok(inboundService.scheduleDock(
+                inboundOrderId,
+                dockId,
+                java.time.LocalDateTime.parse(startTime),
+                java.time.LocalDateTime.parse(endTime),
+                carrierName
+        ));
+    }
+
+    @GetMapping("/lpn/generate")
+    public ResponseEntity<String> generateLpn() {
+        return ResponseEntity.ok(inboundService.generateLpn());
+    }
 }

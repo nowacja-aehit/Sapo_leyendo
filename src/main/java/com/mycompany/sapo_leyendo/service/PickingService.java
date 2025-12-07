@@ -36,9 +36,9 @@ public class PickingService {
      * 1. Wave Planning: Group orders into a Wave
      */
     @Transactional
-    public Wave createWave(String name, List<Integer> outboundOrderIds) {
+    public Wave createWave(List<Integer> outboundOrderIds) {
         Wave wave = new Wave();
-        wave.setName(name);
+        wave.setName("Wave-" + System.currentTimeMillis());
         wave.setCreatedDate(LocalDateTime.now());
         wave.setStatus(WaveStatus.PLANNED);
         
@@ -50,6 +50,24 @@ public class PickingService {
         // To be fully functional, OutboundOrder needs a relation to Wave.
         
         return waveRepository.save(wave);
+    }
+
+    @Transactional
+    public Wave runWave(UUID waveId, List<Integer> outboundOrderIds) {
+        allocateWave(waveId, outboundOrderIds);
+        releaseWave(waveId, outboundOrderIds);
+        return waveRepository.findById(waveId).orElseThrow();
+    }
+
+    public List<PickTask> getPickingTasks(UUID waveId) {
+        // This assumes we can find tasks by wave. 
+        // PickTask -> PickList -> Wave
+        // We need a custom query or filter.
+        // For now, let's fetch all tasks and filter in memory (inefficient but works for small scale)
+        List<PickTask> allTasks = pickTaskRepository.findAll();
+        return allTasks.stream()
+                .filter(t -> t.getPickList().getWave().getId().equals(waveId))
+                .toList();
     }
 
     /**
