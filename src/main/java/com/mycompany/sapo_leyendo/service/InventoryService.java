@@ -27,6 +27,9 @@ public class InventoryService {
     @Autowired
     private ReceiptRepository receiptRepository;
 
+    @Autowired
+    private com.mycompany.sapo_leyendo.repository.StockCountSessionRepository stockCountSessionRepository;
+
     public List<Inventory> getAllInventory() {
         return inventoryRepository.findAll();
     }
@@ -100,12 +103,25 @@ public class InventoryService {
     public void completeTask(Integer taskId) {
         MoveTask task = moveTaskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
-
+        
+        task.setStatus(MoveTaskStatus.COMPLETED);
+        moveTaskRepository.save(task);
+        
+        // Update inventory location
         Inventory inventory = task.getInventory();
         inventory.setLocation(task.getTargetLocation());
         inventoryRepository.save(inventory);
+    }
 
-        task.setStatus(MoveTaskStatus.COMPLETED);
-        moveTaskRepository.save(task);
+    @Transactional
+    public StockCountSession createStockCountSession(StockCountType type, List<Integer> locationIds) {
+        StockCountSession session = new StockCountSession();
+        session.setType(type);
+        session.setStatus(StockCountStatus.OPEN);
+        
+        List<Location> locations = locationRepository.findAllById(locationIds);
+        session.setLocations(locations);
+        
+        return stockCountSessionRepository.save(session);
     }
 }
