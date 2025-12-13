@@ -179,35 +179,35 @@ INSERT INTO UserRoles (id_user, id_role) VALUES
 (10, 4); -- Nowicki (nieaktywny Picker)
 
 -- Tabela `Products` (Produkty) - 15 rekordów (id_product będzie AUTOINCREMENT)
-INSERT INTO Products (sku, name, id_category, id_base_uom, weight_kg, length_cm, width_cm, height_cm) VALUES
-('LAP-DEL-XPS15', 'Laptop Dell XPS 15', 5, 1, 2.5, 40, 30, 5),
-('IPH-15-PRO', 'Apple iPhone 15 Pro 256GB', 6, 1, 0.4, 20, 12, 3),
-('TSH-XYZ-L-BLK', 'T-Shirt XYZ Czarny L', 7, 1, 0.3, 30, 20, 2),
-('JNS-WRG-32-32', 'Jeansy Wrangler 32/32', 8, 1, 0.8, 40, 30, 5),
-('HAM-BCH-01', 'Młotek Bosch 500g', 9, 1, 0.6, 25, 10, 4),
-('WAT-ZRO-05-PAL', 'Woda Źródlana 0.5L (Paleta)', 10, 7, 300, 120, 80, 150),
-('WAT-ZRO-05-KAR', 'Woda Źródlana 0.5L (Karton)', 10, 6, 6.5, 30, 20, 15),
-('WAT-ZRO-05-SZT', 'Woda Źródlana 0.5L', 10, 1, 0.55, 6, 6, 22),
-('KBL-HDMI-2M', 'Kabel HDMI 2m', 6, 1, 0.1, 15, 15, 2),
-('COF-LAV-1KG', 'Kawa Lavazza 1kg ziarno', 4, 1, 1.0, 20, 10, 8),
-('PRL-ARI-5KG', 'Proszek do prania Ariel 5kg', 3, 2, 5.0, 30, 25, 10),
-('PAP-A4-RYS', 'Papier A4 500 szt. (Rysa)', 3, 8, 2.5, 30, 21, 5),
-('MYD-DOV-100G', 'Mydło Dove 100g', 3, 1, 0.1, 10, 6, 3),
-('TV-SAM-55Q', 'Telewizor Samsung 55" QLED', 5, 1, 25.0, 140, 80, 15),
-('MIK-SAM-1000W', 'Mikrofalówka Samsung 1000W', 11, 1, 12.0, 50, 40, 35);
+INSERT INTO Products (sku, name, id_category, id_base_uom, weight_kg, length_cm, width_cm, height_cm, unit_price, min_stock_level) VALUES
+('LAP-DEL-XPS15', 'Laptop Dell XPS 15', 5, 1, 2.5, 40, 30, 5, 7200.00, 5),
+('IPH-15-PRO', 'Apple iPhone 15 Pro 256GB', 6, 1, 0.4, 20, 12, 3, 5400.00, 10),
+('TSH-XYZ-L-BLK', 'T-Shirt XYZ Czarny L', 7, 1, 0.3, 30, 20, 2, 49.90, 50),
+('JNS-WRG-32-32', 'Jeansy Wrangler 32/32', 8, 1, 0.8, 40, 30, 5, 199.00, 20),
+('HAM-BCH-01', 'Mlotek Bosch 500g', 9, 1, 0.6, 25, 10, 4, 149.00, 15),
+('WAT-ZRO-05-PAL', 'Woda Zrodlana 0.5L (Paleta)', 10, 7, 300, 120, 80, 150, 1200.00, 5),
+('WAT-ZRO-05-KAR', 'Woda Zrodlana 0.5L (Karton)', 10, 6, 6.5, 30, 20, 15, 45.00, 30),
+('WAT-ZRO-05-SZT', 'Woda Zrodlana 0.5L', 10, 1, 0.55, 6, 6, 22, 2.50, 200),
+('KBL-HDMI-2M', 'Kabel HDMI 2m', 6, 1, 0.1, 15, 15, 2, 29.90, 40),
+('COF-LAV-1KG', 'Kawa Lavazza 1kg ziarno', 4, 1, 1.0, 20, 10, 8, 89.00, 25),
+('PRL-ARI-5KG', 'Proszek do prania Ariel 5kg', 3, 2, 5.0, 30, 25, 10, 79.00, 20),
+('PAP-A4-RYS', 'Papier A4 500 szt. (Rysa)', 3, 8, 2.5, 30, 21, 5, 19.00, 60),
+('MYD-DOV-100G', 'Mydlo Dove 100g', 3, 1, 0.1, 10, 6, 3, 8.99, 100),
+('TV-SAM-55Q', 'Telewizor Samsung 55" QLED', 5, 1, 25.0, 140, 80, 15, 3999.00, 3),
+('MIK-SAM-1000W', 'Mikrofalowka Samsung 1000W', 11, 1, 12.0, 50, 40, 35, 799.00, 5);
 
 -- Tabela `OutboundOrders`
-INSERT INTO OutboundOrders (reference_number, status, ship_date, destination, id_user_created) VALUES
-('ORD-2025-001', 'NEW', '2025-12-20 00:00:00.000', 'Warsaw, Poland', 1),
-('ORD-2025-002', 'PICKING', '2025-12-21 00:00:00.000', 'Berlin, Germany', 1),
-('ORD-2025-003', 'SHIPPED', '2025-12-10 00:00:00.000', 'Paris, France', 1);
+INSERT INTO OutboundOrders (reference_number, status, ship_date, destination, id_user_created, customer_name, priority, total_amount, items_count, order_date) VALUES
+('ORD-2025-001', 'NEW', '2025-12-20 00:00:00.000', 'Warsaw, Poland', 1, 'Tech Solutions Sp. z o.o.', 'High', 14459.80, 4, '2025-12-18'),
+('ORD-2025-002', 'PICKING', '2025-12-21 00:00:00.000', 'Berlin, Germany', 1, 'Berlin Retail GmbH', 'Medium', 27000.00, 5, '2025-12-19'),
+('ORD-2025-003', 'SHIPPED', '2025-12-10 00:00:00.000', 'Paris, France', 1, 'Paris Boutique SARL', 'Low', 3999.00, 1, '2025-12-05');
 
 -- Tabela `OutboundOrderItems`
-INSERT INTO OutboundOrderItems (id_outbound_order, id_product, id_uom, quantity_ordered, quantity_picked, quantity_shipped) VALUES
-(1, 1, 1, 2, 0, 0), -- 2x Laptop Dell
-(1, 9, 1, 2, 0, 0), -- 2x HDMI Cable
-(2, 2, 1, 5, 2, 0), -- 5x iPhone 15
-(3, 14, 1, 1, 1, 1); -- 1x TV Samsung
+INSERT INTO OutboundOrderItems (id_outbound_order, id_product, id_uom, quantity_ordered, quantity_picked, quantity_shipped, unit_price, line_total, sku, product_name, location_code, status) VALUES
+(1, 1, 1, 2, 0, 0, 7200.00, 14400.00, 'LAP-DEL-XPS15', 'Laptop Dell XPS 15', 'A-01-01', 'Zaplanowany'),
+(1, 9, 1, 2, 0, 0, 29.90, 59.80, 'KBL-HDMI-2M', 'Kabel HDMI 2m', 'A-01-02', 'Zaplanowany'),
+(2, 2, 1, 5, 2, 0, 5400.00, 27000.00, 'IPH-15-PRO', 'Apple iPhone 15 Pro 256GB', 'A-01-01', 'Picking'),
+(3, 14, 1, 1, 1, 1, 3999.00, 3999.00, 'TV-SAM-55Q', 'Telewizor Samsung 55" QLED', 'A-02-01', 'Wyslany');
 
 -- Tabela `InboundOrders`
 INSERT INTO InboundOrders (reference_number, status, expected_date, supplier, dock_id) VALUES

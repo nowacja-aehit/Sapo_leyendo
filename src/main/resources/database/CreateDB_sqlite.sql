@@ -106,6 +106,8 @@ CREATE TABLE Products (
     length_cm REAL NULL,
     width_cm REAL NULL,
     height_cm REAL NULL,
+    unit_price REAL NULL,
+    min_stock_level INTEGER NULL,
     FOREIGN KEY (id_category) REFERENCES ProductCategories(id_category) ON DELETE SET NULL,
     FOREIGN KEY (id_base_uom) REFERENCES UnitOfMeasure(id_uom) ON DELETE RESTRICT
 );
@@ -176,6 +178,7 @@ CREATE TABLE Inventory (
     lpn VARCHAR(50) NULL,
     batch_number VARCHAR(100) NULL,
     expiry_date TEXT NULL, -- Używamy TEXT dla dat
+    reorder_level INTEGER NULL,
     status TEXT NOT NULL DEFAULT 'AVAILABLE' CHECK(status IN ('AVAILABLE', 'ALLOCATED', 'QC_HOLD', 'BLOCKED', 'DAMAGED')),
     received_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
     
@@ -228,6 +231,11 @@ CREATE TABLE OutboundOrders (
     status TEXT NOT NULL DEFAULT 'NEW' CHECK(status IN ('NEW', 'ALLOCATED', 'PICKING', 'PACKED', 'SHIPPED', 'CANCELLED')),
     ship_date TEXT NULL,
     destination VARCHAR(255) NULL,
+    customer_name VARCHAR(255) NULL,
+    priority TEXT NOT NULL DEFAULT 'Medium',
+    total_amount REAL NULL,
+    items_count INTEGER NULL,
+    order_date TEXT NULL,
     created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
     id_user_created INTEGER NULL,
     FOREIGN KEY (id_user_created) REFERENCES Users(id_user) ON DELETE SET NULL
@@ -242,6 +250,12 @@ CREATE TABLE OutboundOrderItems (
     quantity_ordered REAL NOT NULL,
     quantity_picked REAL NOT NULL DEFAULT 0,
     quantity_shipped REAL NOT NULL DEFAULT 0,
+    unit_price REAL NULL,
+    line_total REAL NULL,
+    sku VARCHAR(100) NULL,
+    product_name VARCHAR(255) NULL,
+    location_code VARCHAR(50) NULL,
+    status TEXT NULL,
     FOREIGN KEY (id_outbound_order) REFERENCES OutboundOrders(id_outbound_order) ON DELETE CASCADE,
     FOREIGN KEY (id_product) REFERENCES Products(id_product) ON DELETE RESTRICT,
     FOREIGN KEY (id_uom) REFERENCES UnitOfMeasure(id_uom) ON DELETE RESTRICT
