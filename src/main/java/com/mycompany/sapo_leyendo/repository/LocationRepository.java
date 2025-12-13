@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface LocationRepository extends JpaRepository<Location, Integer> {
     Optional<Location> findFirstByLocationTypeNameAndIsActiveTrue(String typeName);
+    Optional<Location> findByName(String name);
 }

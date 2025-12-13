@@ -1,6 +1,6 @@
 package com.mycompany.sapo_leyendo.controller;
 
-import com.mycompany.sapo_leyendo.model.PickTask;
+import com.mycompany.sapo_leyendo.model.PickingTask;
 import com.mycompany.sapo_leyendo.model.Wave;
 import com.mycompany.sapo_leyendo.service.PickingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +29,12 @@ public class PickingController {
     }
 
     @GetMapping("/waves/{waveId}/tasks")
-    public ResponseEntity<List<PickTask>> getPickingTasks(@PathVariable UUID waveId) {
+    public ResponseEntity<List<PickingTask>> getPickingTasks(@PathVariable UUID waveId) {
         return ResponseEntity.ok(pickingService.getPickingTasks(waveId));
     }
 
     @PostMapping("/tasks/{taskId}/confirm")
-    public ResponseEntity<Void> confirmTask(@PathVariable UUID taskId, @RequestParam Integer quantityPicked) {
+    public ResponseEntity<Void> confirmTask(@PathVariable Integer taskId, @RequestParam Integer quantityPicked) {
         pickingService.confirmPickTask(taskId, quantityPicked);
         return ResponseEntity.ok().build();
     }

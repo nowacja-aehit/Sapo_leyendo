@@ -25,7 +25,9 @@ C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\mode
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\service\ReturnsService.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\InventoryStatus.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\ReportingController.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\dto\dashboard\DashboardInventoryItem.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Shipment.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\UnitOfMeasure.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repository\StockCountSessionRepository.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\PackingController.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\InspectionResult.java
@@ -33,6 +35,7 @@ C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\cont
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\TestPlan.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\QcInspection.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\ReturnsController.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\dto\dashboard\DashboardShipment.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\LocationStatus.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\StockCountSession.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\MoveTaskType.java
@@ -52,6 +55,8 @@ C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repo
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Carrier.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\dto\RoleRequest.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\TestStep.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\DashboardController.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\PickingTask.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\StockCountType.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repository\DockAppointmentRepository.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repository\PackingMaterialRepository.java
@@ -84,11 +89,15 @@ C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\serv
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\dto\DashboardStats.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Parcel.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\DefectType.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repository\PickingTaskRepository.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Product.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\QualityControlController.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repository\UnitOfMeasureRepository.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\PackingStationStatus.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\PickingController.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\PickingTaskStatus.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\service\PackingService.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\ProductCategory.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repository\TransportLoadRepository.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\InboundController.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repository\LocationRepository.java
@@ -115,6 +124,7 @@ C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\mode
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\service\QualityControlService.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\RefurbishStatus.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\VisualizationType.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\dto\dashboard\DashboardOrder.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\dto\LoginRequest.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Role.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\ReportController.java

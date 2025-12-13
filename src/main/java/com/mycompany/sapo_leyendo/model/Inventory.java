@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "Inventory")
 @Data
@@ -25,6 +27,10 @@ public class Inventory {
     @JoinColumn(name = "id_location", nullable = false)
     private Location location;
 
+    @ManyToOne
+    @JoinColumn(name = "id_uom", nullable = false)
+    private UnitOfMeasure uom;
+
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
@@ -37,4 +43,7 @@ public class Inventory {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private InventoryStatus status = InventoryStatus.AVAILABLE;
+    
+    @Column(name = "received_at")
+    private LocalDateTime receivedAt;
 }

@@ -21,7 +21,7 @@ public class Shipment {
     @JoinColumn(name = "id_outbound_order", nullable = false)
     private OutboundOrder outboundOrder;
 
-    @Column(name = "carrier_id")
+    @Column(name = "id_carrier")
     private Integer carrierId;
 
     @Column(name = "tracking_number")
@@ -30,15 +30,15 @@ public class Shipment {
     @Column(name = "shipped_at")
     private java.time.LocalDateTime shippedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "id_load")
-    private TransportLoad transportLoad;
+     @ManyToOne
+     @JoinColumn(name = "id_load")
+     private TransportLoad transportLoad;
 
     @Enumerated(EnumType.STRING)
     private ShipmentStatus status;
 
-    @Column(name = "total_weight_kg")
-    private Double totalWeightKg;
+     @Column(name = "total_weight_kg")
+     private Double totalWeightKg;
 
     @OneToMany(mappedBy = "shipment", cascade = CascadeType.ALL)
     private List<Parcel> parcels;

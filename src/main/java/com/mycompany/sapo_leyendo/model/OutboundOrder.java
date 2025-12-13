@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -30,6 +31,9 @@ public class OutboundOrder {
 
     @Column(name = "destination")
     private String destination;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
     
     @OneToMany(mappedBy = "outboundOrder", cascade = CascadeType.ALL)
     private List<OutboundOrderItem> items;

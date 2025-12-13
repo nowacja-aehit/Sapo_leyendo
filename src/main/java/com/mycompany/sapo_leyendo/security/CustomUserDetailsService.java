@@ -22,9 +22,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     @Transactional
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByLogin(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         var authorities = user.getRoles().stream()
                 .flatMap(role -> role.getPermissions().stream())
@@ -37,7 +37,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         );
 
         return org.springframework.security.core.userdetails.User
-                .withUsername(user.getLogin())
+                .withUsername(user.getEmail())
                 .password(user.getPasswordHash()) // Note: In real app, this should be BCrypt encoded
                 .authorities(authorities)
                 .accountExpired(false)

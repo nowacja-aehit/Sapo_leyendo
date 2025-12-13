@@ -1,0 +1,45 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug Backend (Spring Boot)",
+            "request": "launch",
+            "mainClass": "com.mycompany.sapo_leyendo.SapoApplication",
+            "projectName": "sapo_leyendo",
+            "args": "",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "default"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Frontend (npm run dev)",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ],
+            "cwd": "${workspaceFolder}/Visualization",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Debug Frontend (Chrome)",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/Visualization/src",
+            "sourceMapPathOverrides": {
+                "webpack:///./*": "${webRoot}/*"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Full Stack Debug",
+            "configurations": ["Debug Backend (Spring Boot)", "Debug Frontend (npm run dev)", "Debug Frontend (Chrome)"]
+        }
+    ]
+}

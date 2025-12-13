@@ -1,7 +1,14 @@
 package com.mycompany.sapo_leyendo.service;
 
 import com.mycompany.sapo_leyendo.model.*;
-import com.mycompany.sapo_leyendo.repository.*;
+import com.mycompany.sapo_leyendo.repository.InventoryRepository;
+import com.mycompany.sapo_leyendo.repository.OutboundOrderRepository;
+
+import com.mycompany.sapo_leyendo.repository.PickingTaskRepository;
+import com.mycompany.sapo_leyendo.repository.ProductRepository;
+import com.mycompany.sapo_leyendo.repository.UserRepository;
+import com.mycompany.sapo_leyendo.repository.WaveRepository;
+import com.mycompany.sapo_leyendo.repository.PickListRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,28 +16,35 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class PickingService {
 
-    @Autowired
-    private WaveRepository waveRepository;
+    private final OutboundOrderRepository outboundOrderRepository;
+    private final InventoryRepository inventoryRepository;
+    private final PickingTaskRepository pickingTaskRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final WaveRepository waveRepository;
+    private final PickListRepository pickListRepository;
 
-    @Autowired
-    private PickListRepository pickListRepository;
-
-    @Autowired
-    private PickTaskRepository pickTaskRepository;
-
-    @Autowired
-    private OutboundOrderRepository outboundOrderRepository;
-
-    @Autowired
-    private InventoryRepository inventoryRepository;
-
-    @Autowired
-    private LocationRepository locationRepository;
+    public PickingService(OutboundOrderRepository outboundOrderRepository,
+                          InventoryRepository inventoryRepository,
+                          PickingTaskRepository pickingTaskRepository,
+                          ProductRepository productRepository,
+                          UserRepository userRepository,
+                          WaveRepository waveRepository,
+                          PickListRepository pickListRepository) {
+        this.outboundOrderRepository = outboundOrderRepository;
+        this.inventoryRepository = inventoryRepository;
+        this.pickingTaskRepository = pickingTaskRepository;
+        this.productRepository = productRepository;
+        this.userRepository = userRepository;
+        this.waveRepository = waveRepository;
+        this.pickListRepository = pickListRepository;
+    }
 
     /**
      * 1. Wave Planning: Group orders into a Wave
@@ -59,14 +73,14 @@ public class PickingService {
         return waveRepository.findById(waveId).orElseThrow();
     }
 
-    public List<PickTask> getPickingTasks(UUID waveId) {
-        // This assumes we can find tasks by wave. 
+    public List<PickingTask> getPickingTasks(UUID waveId) {
+        // This assumes we can find tasks by wave.
         // PickTask -> PickList -> Wave
         // We need a custom query or filter.
         // For now, let's fetch all tasks and filter in memory (inefficient but works for small scale)
-        List<PickTask> allTasks = pickTaskRepository.findAll();
+        List<PickingTask> allTasks = pickingTaskRepository.findAll();
         return allTasks.stream()
-                .filter(t -> t.getPickList().getWave().getId().equals(waveId))
+                .filter(t -> t.getOutboundOrderItem().getOutboundOrder().getId().equals(waveId))
                 .toList();
     }
 
@@ -187,57 +201,40 @@ public class PickingService {
         List<Inventory> allocatedInv = inventoryRepository.findByProductId(item.getProduct().getId()).stream()
                 .filter(inv -> inv.getStatus() == InventoryStatus.ALLOCATED)
                 .toList();
-
         int qtyToPick = item.getQuantityOrdered();
-
         for (Inventory inv : allocatedInv) {
             if (qtyToPick <= 0) break;
-            
-            // Check if this inventory is already assigned to a task? 
+            // Check if this inventory is already assigned to a task?
             // We need a way to avoid double picking.
             // Let's assume we consume the allocation by creating a task.
-            
             int qty = Math.min(qtyToPick, inv.getQuantity());
-            
-            PickTask task = new PickTask();
-            task.setPickList(pickList);
-            task.setOutboundOrder(order);
-            task.setProduct(item.getProduct());
-            task.setLocation(inv.getLocation());
-            task.setQuantityToPick(qty);
-            task.setQuantityPicked(0);
-            task.setStatus(PickTaskStatus.OPEN);
-            task.setSequence(inv.getLocation().getPickSequence()); // Use location sequence
-            
-            pickTaskRepository.save(task);
-            
+            PickingTask task = new PickingTask();
+            task.setOutboundOrderItem(item);
+            task.setInventory(inv);
+            task.setQuantityToPick((double) qty);
+            task.setStatus(PickingTaskStatus.PENDING);
+            task.setCreatedAt(LocalDateTime.now());
+            pickingTaskRepository.save(task);
             qtyToPick -= qty;
-            
             // In a real system, we would link the task to the inventory ID to know exactly what to pick.
         }
     }
-
     /**
      * 4. Confirm Pick Task
      */
     @Transactional
-    public void confirmPickTask(UUID taskId, Integer quantityPicked) {
-        PickTask task = pickTaskRepository.findById(taskId)
+    public void confirmPickTask(Integer taskId, Integer quantityPicked) {
+        PickingTask task = pickingTaskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
-
-        task.setQuantityPicked(quantityPicked);
-        task.setStatus(PickTaskStatus.PICKED);
-        pickTaskRepository.save(task);
-
+        task.setStatus(PickingTaskStatus.PICKED);
+        pickingTaskRepository.save(task);
         // Update Inventory: Remove the Allocated inventory
         // We need to find the inventory at that location.
         // Since we didn't store inventoryId in PickTask, we have to search.
-        List<Inventory> invs = inventoryRepository.findByLocationId(task.getLocation().getId());
-        
+        List<Inventory> invs = inventoryRepository.findByLocationId(task.getInventory().getLocation().getId());
         for (Inventory inv : invs) {
-            if (inv.getProduct().getId().equals(task.getProduct().getId()) 
+            if (inv.getProduct().getId().equals(task.getOutboundOrderItem().getProduct().getId())
                     && inv.getStatus() == InventoryStatus.ALLOCATED) {
-                
                 if (inv.getQuantity() <= quantityPicked) {
                     inventoryRepository.delete(inv); // Picked fully
                     quantityPicked -= inv.getQuantity();
@@ -246,7 +243,6 @@ public class PickingService {
                     inventoryRepository.save(inv);
                     quantityPicked = 0;
                 }
-                
                 if (quantityPicked <= 0) break;
             }
         }

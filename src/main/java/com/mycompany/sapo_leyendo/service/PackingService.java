@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,6 +70,16 @@ public class PackingService {
         Parcel parcel = parcelRepository.findById(parcelId)
                 .orElseThrow(() -> new RuntimeException("Parcel not found"));
 
+        Shipment shipment = parcel.getShipment();
+        List<Parcel> parcels = shipment.getParcels();
+        List<ParcelItem> parcelItems = new ArrayList<>();
+        for (Parcel p : parcels) {
+            parcelItems.addAll(p.getItems());
+        }
+        if (parcelItems.stream().anyMatch(item -> item.getProduct().getId().equals(productId))) {
+            throw new IllegalStateException("Product already packed in another parcel.");
+        }
+
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
@@ -81,8 +92,12 @@ public class PackingService {
         
         // Update parcel weight (simplified logic)
         if (product.getWeightKg() != null) {
-            parcel.setWeightKg(parcel.getWeightKg() + (product.getWeightKg() * quantity));
+            double itemWeight = product.getWeightKg() * quantity;
+            double newWeight = parcel.getWeightKg() + itemWeight;
+            parcel.setWeightKg(newWeight);
+            shipment.setTotalWeightKg(shipment.getTotalWeightKg() + itemWeight);
             parcelRepository.save(parcel);
+            shipmentRepository.save(shipment);
         }
 
         return parcel;
