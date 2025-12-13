@@ -16,6 +16,8 @@ import com.mycompany.sapo_leyendo.repository.CarrierRepository;
 import com.mycompany.sapo_leyendo.repository.ProductRepository;
 import com.mycompany.sapo_leyendo.repository.LocationRepository;
 import com.mycompany.sapo_leyendo.repository.InventoryRepository;
+import com.mycompany.sapo_leyendo.repository.UnitOfMeasureRepository;
+import com.mycompany.sapo_leyendo.model.UnitOfMeasure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -49,6 +51,9 @@ public class DashboardController {
 
     @Autowired
     private InventoryRepository inventoryRepository;
+
+    @Autowired
+    private UnitOfMeasureRepository uomRepository;
 
     @GetMapping("/inventory")
     public List<DashboardInventoryItem> getInventory() {
@@ -88,6 +93,11 @@ public class DashboardController {
         Inventory inventory = new Inventory();
         inventory.setProduct(product);
         inventory.setLocation(location);
+        
+        UnitOfMeasure uom = uomRepository.findById(product.getIdBaseUom())
+                .orElseThrow(() -> new RuntimeException("UOM not found for ID: " + product.getIdBaseUom()));
+        inventory.setUom(uom);
+
         inventory.setQuantity(item.quantity());
         inventory.setStatus(InventoryStatus.AVAILABLE);
         

@@ -7,12 +7,18 @@ import { OrdersView } from "./dashboard/OrdersView";
 import { AnalyticsView } from "./dashboard/AnalyticsView";
 import { AIInsightsView } from "./dashboard/AIInsightsView";
 import { ShipmentsView } from "./dashboard/ShipmentsView";
+import { InboundView } from "./dashboard/InboundView";
+import { PickingView } from "./dashboard/PickingView";
+import { PackingView } from "./dashboard/PackingView";
+import { ReturnsView } from "./dashboard/ReturnsView";
+import { QualityControlView } from "./dashboard/QualityControlView";
+import { LocationView } from "./dashboard/LocationView";
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
-export type ViewType = "overview" | "inventory" | "orders" | "shipments" | "analytics" | "ai-insights";
+export type ViewType = "overview" | "inventory" | "orders" | "shipments" | "analytics" | "ai-insights" | "inbound" | "picking" | "packing" | "returns" | "qc" | "locations";
 
 export function Dashboard({ onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<ViewType>("overview");
@@ -24,10 +30,22 @@ export function Dashboard({ onLogout }: DashboardProps) {
         return <DashboardOverview onNavigate={setCurrentView} />;
       case "inventory":
         return <InventoryView />;
+      case "inbound":
+        return <InboundView />;
+      case "picking":
+        return <PickingView />;
+      case "packing":
+        return <PackingView />;
       case "orders":
         return <OrdersView />;
       case "shipments":
         return <ShipmentsView />;
+      case "returns":
+        return <ReturnsView />;
+      case "qc":
+        return <QualityControlView />;
+      case "locations":
+        return <LocationView />;
       case "analytics":
         return <AnalyticsView />;
       case "ai-insights":

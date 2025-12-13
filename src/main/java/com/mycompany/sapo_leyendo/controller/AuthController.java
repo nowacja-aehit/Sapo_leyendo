@@ -36,36 +36,41 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<UserInfo> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
-        Authentication authenticationRequest =
-                UsernamePasswordAuthenticationToken.unauthenticated(loginRequest.getEmail(), loginRequest.getPassword());
-        
-        Authentication authenticationResponse =
-                this.authenticationManager.authenticate(authenticationRequest);
+        try {
+            Authentication authenticationRequest =
+                    UsernamePasswordAuthenticationToken.unauthenticated(loginRequest.getEmail(), loginRequest.getPassword());
+            
+            Authentication authenticationResponse =
+                    this.authenticationManager.authenticate(authenticationRequest);
 
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authenticationResponse);
-        SecurityContextHolder.setContext(context);
-        securityContextRepository.saveContext(context, request, response);
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authenticationResponse);
+            SecurityContextHolder.setContext(context);
+            securityContextRepository.saveContext(context, request, response);
 
-        User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow();
-        
-        var roles = user.getRoles().stream()
-                .map(role -> role.getRoleName())
-                .collect(Collectors.toSet());
+            User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow();
+            
+            var roles = user.getRoles().stream()
+                    .map(role -> role.getRoleName())
+                    .collect(Collectors.toSet());
 
-        var permissions = user.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(permission -> permission.getName())
-                .collect(Collectors.toSet());
+            var permissions = user.getRoles().stream()
+                    .flatMap(role -> role.getPermissions().stream())
+                    .map(permission -> permission.getName())
+                    .collect(Collectors.toSet());
 
-        return ResponseEntity.ok(new UserInfo(
-            user.getId(), 
-            user.getLogin(), 
-            user.getFirstName(), 
-            user.getLastName(),
-            roles,
-            permissions
-        ));
+            return ResponseEntity.ok(new UserInfo(
+                user.getId(), 
+                user.getLogin(), 
+                user.getFirstName(), 
+                user.getLastName(),
+                roles,
+                permissions
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @PostMapping("/logout")

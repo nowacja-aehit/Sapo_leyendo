@@ -25,6 +25,10 @@ public class Inventory {
     @JoinColumn(name = "id_location", nullable = false)
     private Location location;
 
+    @ManyToOne
+    @JoinColumn(name = "id_uom", nullable = false)
+    private UnitOfMeasure uom;
+
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 

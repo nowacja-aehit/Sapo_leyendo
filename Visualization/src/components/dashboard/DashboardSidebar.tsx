@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingCart, Truck, BarChart3, Brain, X } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Truck, BarChart3, Brain, X, ArrowDownToLine, CheckSquare, Box, RotateCcw, ClipboardCheck, MapPin } from "lucide-react";
 import { ViewType } from "../Dashboard";
 
 interface DashboardSidebarProps {
@@ -11,8 +11,14 @@ interface DashboardSidebarProps {
 const menuItems = [
   { id: "overview" as ViewType, icon: LayoutDashboard, label: "Przegląd" },
   { id: "inventory" as ViewType, icon: Package, label: "Zapasy" },
+  { id: "inbound" as ViewType, icon: ArrowDownToLine, label: "Przyjęcia" },
+  { id: "picking" as ViewType, icon: CheckSquare, label: "Kompletacja" },
+  { id: "packing" as ViewType, icon: Box, label: "Pakowanie" },
   { id: "orders" as ViewType, icon: ShoppingCart, label: "Zamówienia" },
   { id: "shipments" as ViewType, icon: Truck, label: "Przesyłki" },
+  { id: "returns" as ViewType, icon: RotateCcw, label: "Zwroty" },
+  { id: "qc" as ViewType, icon: ClipboardCheck, label: "Kontrola Jakości" },
+  { id: "locations" as ViewType, icon: MapPin, label: "Lokacje" },
   { id: "analytics" as ViewType, icon: BarChart3, label: "Analityka" },
   { id: "ai-insights" as ViewType, icon: Brain, label: "Wglądy AI" },
 ];

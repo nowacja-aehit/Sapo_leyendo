@@ -90,6 +90,7 @@ C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\mode
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\DefectType.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Product.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\QualityControlController.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repository\UnitOfMeasureRepository.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\PackingStationStatus.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\PickingController.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\service\PackingService.java
