@@ -26,6 +26,7 @@ C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\serv
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\InventoryStatus.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\controller\ReportingController.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\dto\dashboard\DashboardInventoryItem.java
+C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\config\DemoDataLoader.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\Shipment.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\model\UnitOfMeasure.java
 C:\Users\j0now\Studio\Sapo_leyendo\src\main\java\com\mycompany\sapo_leyendo\repository\StockCountSessionRepository.java
