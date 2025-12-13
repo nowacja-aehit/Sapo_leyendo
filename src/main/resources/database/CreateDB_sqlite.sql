@@ -119,15 +119,44 @@ CREATE TABLE UOM_Conversions (
     FOREIGN KEY (id_uom_to) REFERENCES UnitOfMeasure(id_uom) ON DELETE CASCADE
 );
 
+-- Tabela `Zones` (Strefy Magazynowe)
+CREATE TABLE Zones (
+    id_zone INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    is_temperature_controlled BOOLEAN DEFAULT 0,
+    is_secure BOOLEAN DEFAULT 0,
+    allow_mixed_sku BOOLEAN DEFAULT 1
+);
+
+-- Tabela `LocationTypes` (Typy Lokalizacji)
+CREATE TABLE LocationTypes (
+    id_location_type INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    max_weight REAL NULL,
+    max_volume REAL NULL,
+    length REAL NULL,
+    width REAL NULL,
+    height REAL NULL
+);
 
 -- Tabela `Locations` (Lokalizacje Magazynowe)
 CREATE TABLE Locations (
     id_location INTEGER PRIMARY KEY AUTOINCREMENT,
-    location_code VARCHAR(50) UNIQUE NOT NULL,
-    location_type TEXT NOT NULL CHECK(location_type IN ('STORAGE', 'PICKING', 'RECEIVING_BAY', 'SHIPPING_BAY', 'QUARANTINE', 'BUFFER')),
-    max_weight_kg REAL NULL,
-    max_volume_m3 REAL NULL
+    name VARCHAR(50) UNIQUE NOT NULL,
+    id_zone INTEGER NULL,
+    id_location_type INTEGER NULL,
+    barcode VARCHAR(100) NULL,
+    aisle VARCHAR(10) NULL,
+    rack VARCHAR(10) NULL,
+    level VARCHAR(10) NULL,
+    bin VARCHAR(10) NULL,
+    pick_sequence INTEGER DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'ACTIVE',
+    is_active BOOLEAN DEFAULT 1,
+    FOREIGN KEY (id_zone) REFERENCES Zones(id_zone) ON DELETE SET NULL,
+    FOREIGN KEY (id_location_type) REFERENCES LocationTypes(id_location_type) ON DELETE SET NULL
 );
+
 
 
 -- ########################################

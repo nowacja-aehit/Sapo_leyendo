@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 
 interface MoveTask {
@@ -45,7 +46,10 @@ export default function TaskList() {
 
   return (
     <div>
-      <h2>Pending Tasks</h2>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2>Pending Tasks</h2>
+        <Link to="/tasks/new" className="btn btn-primary">Create Task</Link>
+      </div>
       <table className="table table-bordered">
         <thead>
           <tr>

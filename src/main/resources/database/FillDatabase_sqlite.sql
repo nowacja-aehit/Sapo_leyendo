@@ -33,7 +33,9 @@ DELETE FROM Permissions;
 DELETE FROM UserRoles;
 DELETE FROM Users;
 DELETE FROM Roles;
--- DELETE FROM Locations;
+DELETE FROM Locations;
+DELETE FROM Zones;
+DELETE FROM LocationTypes;
 -- DELETE FROM UnitOfMeasure;
 -- DELETE FROM Carriers;
 
@@ -77,6 +79,21 @@ INSERT INTO RolePermissions (id_role, id_permission) VALUES
 (4, 3), (4, 5),
 -- PACKER: Tylko Outbound
 (5, 3), (5, 4);
+
+-- Tabela `Zones`
+INSERT INTO Zones (id_zone, name, is_temperature_controlled, is_secure, allow_mixed_sku) VALUES
+(1, 'General Storage', 0, 0, 1),
+(2, 'Cold Storage', 1, 0, 0),
+(3, 'Secure Cage', 0, 1, 0),
+(4, 'Receiving', 0, 0, 1),
+(5, 'Shipping', 0, 0, 1);
+
+-- Tabela `LocationTypes`
+INSERT INTO LocationTypes (id_location_type, name, max_weight, max_volume, length, width, height) VALUES
+(1, 'Standard Pallet Rack', 1000.0, 2.0, 1.2, 1.0, 1.5),
+(2, 'Small Bin', 20.0, 0.1, 0.4, 0.3, 0.3),
+(3, 'Floor Location', 5000.0, 10.0, 2.0, 2.0, 2.5),
+(4, 'Dock Door', NULL, NULL, NULL, NULL, NULL);
 
 /*
 -- Tabela `UnitOfMeasure` (Jednostki Miary)

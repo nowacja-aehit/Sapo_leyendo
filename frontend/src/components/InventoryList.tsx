@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 
 interface Product {
@@ -27,6 +28,10 @@ export default function InventoryList() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    fetchInventory()
+  }, [])
+
+  const fetchInventory = () => {
     axios.get('/api/inventory')
       .then(response => {
         setInventory(response.data)
@@ -37,14 +42,29 @@ export default function InventoryList() {
         setError('Failed to fetch inventory')
         setLoading(false)
       })
-  }, [])
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this inventory item?')) return
+
+    try {
+      await axios.delete(`/api/inventory/${id}`)
+      setInventory(inventory.filter(i => i.id !== id))
+    } catch (err) {
+      console.error(err)
+      alert('Failed to delete inventory item')
+    }
+  }
 
   if (loading) return <div>Loading inventory...</div>
   if (error) return <div className="alert alert-danger">{error}</div>
 
   return (
     <div>
-      <h2>Current Inventory</h2>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2>Current Inventory</h2>
+        <Link to="/inventory/new" className="btn btn-primary">Add Inventory</Link>
+      </div>
       <table className="table table-striped table-hover">
         <thead className="table-dark">
           <tr>
@@ -54,6 +74,7 @@ export default function InventoryList() {
             <th>Location</th>
             <th>Quantity</th>
             <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -68,6 +89,14 @@ export default function InventoryList() {
                 <span className={`badge ${item.status === 'AVAILABLE' ? 'bg-success' : 'bg-warning'}`}>
                   {item.status}
                 </span>
+              </td>
+              <td>
+                <button 
+                  onClick={() => handleDelete(item.id)} 
+                  className="btn btn-outline-danger btn-sm"
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}

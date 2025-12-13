@@ -46,7 +46,11 @@ export default function LocationList() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2>Warehouse Locations</h2>
-        <Link to="/locations/new" className="btn btn-primary">New Location</Link>
+        <div className="btn-group">
+          <Link to="/zones" className="btn btn-outline-secondary">Manage Zones</Link>
+          <Link to="/location-types" className="btn btn-outline-secondary">Manage Types</Link>
+          <Link to="/locations/new" className="btn btn-primary">New Location</Link>
+        </div>
       </div>
       <table className="table table-striped table-hover">
         <thead className="table-dark">

@@ -2,17 +2,26 @@ import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from 'react
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './components/Login'
 import ProductList from './components/ProductList'
+import ProductForm from './components/ProductForm'
 import UserList from './components/UserList'
 import UserForm from './components/UserForm'
 import RoleList from './components/RoleList'
 import RoleForm from './components/RoleForm'
 import LocationList from './components/LocationList'
 import LocationForm from './components/LocationForm'
+import ZoneList from './components/ZoneList'
+import ZoneForm from './components/ZoneForm'
+import LocationTypeList from './components/LocationTypeList'
+import LocationTypeForm from './components/LocationTypeForm'
 import InventoryList from './components/InventoryList'
+import InventoryForm from './components/InventoryForm'
 import TaskList from './components/TaskList'
+import TaskForm from './components/TaskForm'
 import InboundList from './components/InboundList'
+import InboundForm from './components/InboundForm'
 import InboundReceive from './components/InboundReceive'
 import OutboundList from './components/OutboundList'
+import OutboundForm from './components/OutboundForm'
 import ReportDashboard from './components/ReportDashboard'
 import PickingDashboard from './components/PickingDashboard'
 import PackingStation from './components/PackingStation'
@@ -101,6 +110,16 @@ function AppContent() {
               <ProductList />
             </PrivateRoute>
           } />
+          <Route path="/products/new" element={
+            <PrivateRoute>
+              <ProductForm />
+            </PrivateRoute>
+          } />
+          <Route path="/products/:id" element={
+            <PrivateRoute>
+              <ProductForm />
+            </PrivateRoute>
+          } />
           <Route path="/users" element={
             <PrivateRoute>
               <UserList />
@@ -141,9 +160,34 @@ function AppContent() {
               <LocationForm />
             </PrivateRoute>
           } />
+          <Route path="/zones" element={
+            <PrivateRoute>
+              <ZoneList />
+            </PrivateRoute>
+          } />
+          <Route path="/zones/new" element={
+            <PrivateRoute>
+              <ZoneForm />
+            </PrivateRoute>
+          } />
+          <Route path="/location-types" element={
+            <PrivateRoute>
+              <LocationTypeList />
+            </PrivateRoute>
+          } />
+          <Route path="/location-types/new" element={
+            <PrivateRoute>
+              <LocationTypeForm />
+            </PrivateRoute>
+          } />
           <Route path="/inventory" element={
             <PrivateRoute>
               <InventoryList />
+            </PrivateRoute>
+          } />
+          <Route path="/inventory/new" element={
+            <PrivateRoute>
+              <InventoryForm />
             </PrivateRoute>
           } />
           <Route path="/tasks" element={
@@ -151,9 +195,19 @@ function AppContent() {
               <TaskList />
             </PrivateRoute>
           } />
+          <Route path="/tasks/new" element={
+            <PrivateRoute>
+              <TaskForm />
+            </PrivateRoute>
+          } />
           <Route path="/inbound" element={
             <PrivateRoute>
               <InboundList />
+            </PrivateRoute>
+          } />
+          <Route path="/inbound/new" element={
+            <PrivateRoute>
+              <InboundForm />
             </PrivateRoute>
           } />
           <Route path="/inbound/:id/receive" element={
@@ -164,6 +218,11 @@ function AppContent() {
           <Route path="/outbound" element={
             <PrivateRoute>
               <OutboundList />
+            </PrivateRoute>
+          } />
+          <Route path="/outbound/new" element={
+            <PrivateRoute>
+              <OutboundForm />
             </PrivateRoute>
           } />
           <Route path="/picking" element={
