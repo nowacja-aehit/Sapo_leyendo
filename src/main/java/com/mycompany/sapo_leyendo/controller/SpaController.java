@@ -11,4 +11,10 @@ public class SpaController {
     public String redirect() {
         return "forward:/index.html";
     }
+
+    // Also handle the root path
+    @RequestMapping(value = "/")
+    public String root() {
+        return "forward:/index.html";
+    }
 }
