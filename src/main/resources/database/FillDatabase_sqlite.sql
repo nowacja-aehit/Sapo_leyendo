@@ -198,9 +198,9 @@ INSERT INTO Products (sku, name, id_category, id_base_uom, weight_kg, length_cm,
 
 -- Tabela `OutboundOrders`
 INSERT INTO OutboundOrders (reference_number, status, ship_date, destination, id_user_created, customer_name, priority, total_amount, items_count, order_date) VALUES
-('ORD-2025-001', 'NEW', '2025-12-20 00:00:00.000', 'Warsaw, Poland', 1, 'Tech Solutions Sp. z o.o.', 'High', 14459.80, 4, '2025-12-18'),
-('ORD-2025-002', 'PICKING', '2025-12-21 00:00:00.000', 'Berlin, Germany', 1, 'Berlin Retail GmbH', 'Medium', 27000.00, 5, '2025-12-19'),
-('ORD-2025-003', 'SHIPPED', '2025-12-10 00:00:00.000', 'Paris, France', 1, 'Paris Boutique SARL', 'Low', 3999.00, 1, '2025-12-05');
+('ORD-2025-001', 'NEW', '2025-12-20 00:00:00.000', 'Warsaw, Poland', 1, 'Tech Solutions Sp. z o.o.', 'High', 14459.80, 4, '2025-12-18 00:00:00.000'),
+('ORD-2025-002', 'PICKING', '2025-12-21 00:00:00.000', 'Berlin, Germany', 1, 'Berlin Retail GmbH', 'Medium', 27000.00, 5, '2025-12-19 00:00:00.000'),
+('ORD-2025-003', 'SHIPPED', '2025-12-10 00:00:00.000', 'Paris, France', 1, 'Paris Boutique SARL', 'Low', 3999.00, 1, '2025-12-05 00:00:00.000');
 
 -- Tabela `OutboundOrderItems`
 INSERT INTO OutboundOrderItems (id_outbound_order, id_product, id_uom, quantity_ordered, quantity_picked, quantity_shipped, unit_price, line_total, sku, product_name, location_code, status) VALUES

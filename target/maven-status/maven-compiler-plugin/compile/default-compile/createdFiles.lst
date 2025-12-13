@@ -95,6 +95,7 @@ com\mycompany\sapo_leyendo\dto\ReceiveItemRequest.class
 com\mycompany\sapo_leyendo\model\Permission.class
 com\mycompany\sapo_leyendo\repository\ParcelItemRepository.class
 com\mycompany\sapo_leyendo\service\ReturnsService$1.class
+com\mycompany\sapo_leyendo\config\DatabaseResetRunner.class
 com\mycompany\sapo_leyendo\model\RefurbishStatus.class
 com\mycompany\sapo_leyendo\model\Inventory.class
 com\mycompany\sapo_leyendo\model\NonConformanceReport.class

@@ -56,7 +56,9 @@ class QualityControlServiceTest {
         product.setId(1);
         product.setSku("SKU1");
         product.setName("Test Product");
-        product.setIdCategory(1);
+        ProductCategory category = new ProductCategory();
+        category.setId(1);
+        product.setCategory(category);
         product.setIdBaseUom(1);
         
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
