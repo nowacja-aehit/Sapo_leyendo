@@ -145,5 +145,6 @@ com\mycompany\sapo_leyendo\repository\TestPlanRepository.class
 com\mycompany\sapo_leyendo\service\LocationService.class
 com\mycompany\sapo_leyendo\model\IntegrationType.class
 com\mycompany\sapo_leyendo\model\Parcel.class
+com\mycompany\sapo_leyendo\config\DemoDataLoader.class
 com\mycompany\sapo_leyendo\repository\ReceiptRepository.class
 com\mycompany\sapo_leyendo\repository\InventoryRepository.class
