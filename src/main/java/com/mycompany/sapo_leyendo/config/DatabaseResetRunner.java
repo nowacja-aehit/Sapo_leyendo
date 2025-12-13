@@ -28,16 +28,17 @@ public class DatabaseResetRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String clearFlag = System.getenv().getOrDefault("CLEARDATABASE", "0");
-        if (!"1".equals(clearFlag)) {
-            log.info("CLEARDATABASE flag not set to 1. Skipping database reset.");
+        boolean shouldClear = shouldClearDatabase();
+        if (!shouldClear) {
+            log.info("CLEARDATABASE flag is not '1'. Skipping database reset.");
             return;
         }
 
-        log.warn("CLEARDATABASE=1 detected. Clearing database before seeding.");
+        List<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
+        log.warn("CLEARDATABASE=1 detected. Clearing database before seeding. Aktywne profile: {}", activeProfiles);
 
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        boolean mysqlProfile = Arrays.asList(environment.getActiveProfiles()).contains("mysql");
+        boolean mysqlProfile = activeProfiles.contains("mysql");
 
         if (mysqlProfile) {
             resetMySql(jdbcTemplate);
@@ -46,6 +47,18 @@ public class DatabaseResetRunner implements CommandLineRunner {
             resetSqlite(jdbcTemplate);
             reseedSqlite();
         }
+    }
+
+    private boolean shouldClearDatabase() {
+        // Read flag from Spring Environment first (picks up App Service settings), fall back to process env
+        String flag = environment.getProperty("CLEARDATABASE",
+                System.getenv().getOrDefault("CLEARDATABASE", "0"));
+        if (flag == null) {
+            flag = "0";
+        }
+        flag = flag.trim();
+        log.info("CLEARDATABASE resolved to '{}'.", flag);
+        return "1".equals(flag);
     }
 
     private void resetMySql(JdbcTemplate jdbcTemplate) {
