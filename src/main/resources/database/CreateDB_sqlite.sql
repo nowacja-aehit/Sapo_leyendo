@@ -153,7 +153,7 @@ CREATE TABLE Locations (
     bin VARCHAR(10) NULL,
     pick_sequence INTEGER DEFAULT 0,
     status VARCHAR(20) DEFAULT 'ACTIVE',
-    is_active BOOLEAN DEFAULT 1,
+    is_active BOOLEAN NOT NULL DEFAULT 1,
     FOREIGN KEY (id_zone) REFERENCES Zones(id_zone) ON DELETE SET NULL,
     FOREIGN KEY (id_location_type) REFERENCES LocationTypes(id_location_type) ON DELETE SET NULL
 );
