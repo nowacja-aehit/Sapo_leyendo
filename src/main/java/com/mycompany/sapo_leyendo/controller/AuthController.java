@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"}, allowCredentials = "true")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -36,7 +37,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<UserInfo> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
         Authentication authenticationRequest =
-                UsernamePasswordAuthenticationToken.unauthenticated(loginRequest.getUsername(), loginRequest.getPassword());
+                UsernamePasswordAuthenticationToken.unauthenticated(loginRequest.getEmail(), loginRequest.getPassword());
         
         Authentication authenticationResponse =
                 this.authenticationManager.authenticate(authenticationRequest);
@@ -46,7 +47,7 @@ public class AuthController {
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
 
-        User user = userRepository.findByLogin(loginRequest.getUsername()).orElseThrow();
+        User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow();
         
         var roles = user.getRoles().stream()
                 .map(role -> role.getRoleName())

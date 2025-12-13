@@ -27,7 +27,7 @@ PRAGMA foreign_keys = OFF; -- Wyłączamy sprawdzanie kluczy na czas ładowania 
 -- DELETE FROM WmsOrders;
 -- DELETE FROM GoodsReceived;
 DELETE FROM Products;
--- DELETE FROM ProductCategories;
+DELETE FROM ProductCategories;
 DELETE FROM RolePermissions;
 DELETE FROM Permissions;
 DELETE FROM UserRoles;
@@ -36,8 +36,8 @@ DELETE FROM Roles;
 DELETE FROM Locations;
 DELETE FROM Zones;
 DELETE FROM LocationTypes;
--- DELETE FROM UnitOfMeasure;
--- DELETE FROM Carriers;
+DELETE FROM UnitOfMeasure;
+DELETE FROM Carriers;
 
 -- Resetujemy sekwencje AUTOINCREMENT
 -- DELETE FROM sqlite_sequence WHERE name IN (
@@ -95,7 +95,6 @@ INSERT INTO LocationTypes (id_location_type, name, max_weight, max_volume, lengt
 (3, 'Floor Location', 5000.0, 10.0, 2.0, 2.0, 2.5),
 (4, 'Dock Door', NULL, NULL, NULL, NULL, NULL);
 
-/*
 -- Tabela `UnitOfMeasure` (Jednostki Miary)
 INSERT INTO UnitOfMeasure (id_uom, code, name) VALUES
 (1, 'SZT', 'Sztuka'),
@@ -115,23 +114,23 @@ INSERT INTO Carriers (id_carrier, name, tracking_url_template) VALUES
 (4, 'InPost Paczkomaty', 'https://inpost.pl/sledzenie-przesylek?number='),
 (5, 'FedEx', 'https://www.fedex.com/pl-pl/tracking.html?trackingNumbers=');
 
--- Tabela `Locations` (Lokalizacje Magazynowe) - 15 rekordów (id_location będzie AUTOINCREMENT)
-INSERT INTO Locations (location_code, location_type) VALUES
-('REC-01', 'RECEIVING_BAY'),
-('REC-02', 'RECEIVING_BAY'),
-('SHIP-01', 'SHIPPING_BAY'),
-('SHIP-02', 'SHIPPING_BAY'),
-('QUAR-01', 'QUARANTINE'),
-('BUF-01', 'BUFFER'),
-('A-01-01', 'STORAGE'),
-('A-01-02', 'STORAGE'),
-('A-02-01', 'STORAGE'),
-('A-02-02', 'STORAGE'),
-('B-01-01', 'STORAGE'),
-('B-01-02', 'STORAGE'),
-('P-A-01', 'PICKING'), -- Strefa pickingowa dla regału A
-('P-A-02', 'PICKING'),
-('P-B-01', 'PICKING'); -- Strefa pickingowa dla regału B
+-- Tabela `Locations` (Lokalizacje Magazynowe)
+INSERT INTO Locations (name, id_location_type, id_zone) VALUES
+('REC-01', 4, 4),
+('REC-02', 4, 4),
+('SHIP-01', 4, 5),
+('SHIP-02', 4, 5),
+('QUAR-01', 3, 3),
+('BUF-01', 3, 1),
+('A-01-01', 1, 1),
+('A-01-02', 1, 1),
+('A-02-01', 1, 1),
+('A-02-02', 1, 1),
+('B-01-01', 1, 1),
+('B-01-02', 1, 1),
+('P-A-01', 2, 1),
+('P-A-02', 2, 1),
+('P-B-01', 2, 1);
 
 -- Tabela `ProductCategories` (Kategorie Produktów) - 11 rekordów
 INSERT INTO ProductCategories (id_category, name, parent_category_id) VALUES
@@ -146,20 +145,19 @@ INSERT INTO ProductCategories (id_category, name, parent_category_id) VALUES
 (9, 'Narzędzia', 3),
 (10, 'Napoje', 4),
 (11, 'AGD', 1);
-*/
 
 -- Tabela `Users` (Użytkownicy) - 10 rekordów (id_user będzie AUTOINCREMENT)
-INSERT INTO Users (login, password_hash, first_name, last_name, is_active) VALUES
-('admin', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Adam', 'Min', 1), -- password: password
-('manager', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Marta', 'Nager', 1),
-('jkowalski', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Jan', 'Kowalski', 1),
-('anowak', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Anna', 'Nowak', 1),
-('pzielinski', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Piotr', 'Zieliński', 1),
-('kwisniewska', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Katarzyna', 'Wiśniewska', 1),
-('mwojcik', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Marek', 'Wójcik', 1),
-('tkaminski', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Tomasz', 'Kamiński', 1),
-('olewandowska', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Olga', 'Lewandowska', 1),
-('jnowicki', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Janusz', 'Nowicki', 0); -- Nieaktywny
+INSERT INTO Users (login, email, password_hash, first_name, last_name, is_active) VALUES
+('admin', 'admin@example.com', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Adam', 'Min', 1), -- password: password
+('manager', 'manager@example.com', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Marta', 'Nager', 1),
+('jkowalski', 'jkowalski@example.com', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Jan', 'Kowalski', 1),
+('anowak', 'anowak@example.com', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Anna', 'Nowak', 1),
+('pzielinski', 'pzielinski@example.com', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Piotr', 'Zieliński', 1),
+('kwisniewska', 'kwisniewska@example.com', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Katarzyna', 'Wiśniewska', 1),
+('mwojcik', 'mwojcik@example.com', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Marek', 'Wójcik', 1),
+('tkaminski', 'tkaminski@example.com', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Tomasz', 'Kamiński', 1),
+('olewandowska', 'olewandowska@example.com', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Olga', 'Lewandowska', 1),
+('jnowicki', 'jnowicki@example.com', '$2a$10$Crwcf/gQEjIrUgNieWKfZOKMyC1kLlSwYaV4zep0rJy2A3SNDhpim', 'Janusz', 'Nowicki', 0); -- Nieaktywny
 
 -- ########################################
 -- SEKCJA 2: TABELE Z ZALEŻNOŚCIAMI (POZIOM 1)
