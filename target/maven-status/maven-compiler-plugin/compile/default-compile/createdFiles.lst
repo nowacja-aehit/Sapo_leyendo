@@ -36,6 +36,7 @@ com\mycompany\sapo_leyendo\model\PickListStatus.class
 com\mycompany\sapo_leyendo\controller\DashboardController.class
 com\mycompany\sapo_leyendo\model\InboundOrder.class
 com\mycompany\sapo_leyendo\repository\ProductRepository.class
+com\mycompany\sapo_leyendo\config\AzureMySqlConfig.class
 com\mycompany\sapo_leyendo\repository\DockAppointmentRepository.class
 com\mycompany\sapo_leyendo\repository\ZoneRepository.class
 com\mycompany\sapo_leyendo\repository\KpiMetricRepository.class
@@ -60,6 +61,7 @@ com\mycompany\sapo_leyendo\repository\StockCountSessionRepository.class
 com\mycompany\sapo_leyendo\model\TransportLoad.class
 com\mycompany\sapo_leyendo\controller\PackingController.class
 com\mycompany\sapo_leyendo\service\ReturnsService.class
+com\mycompany\sapo_leyendo\controller\PickingController.class
 com\mycompany\sapo_leyendo\model\Role.class
 com\mycompany\sapo_leyendo\model\AuditLog.class
 com\mycompany\sapo_leyendo\model\RefurbishTask.class
