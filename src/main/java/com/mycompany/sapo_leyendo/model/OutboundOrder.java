@@ -46,7 +46,7 @@ public class OutboundOrder {
 
     @JsonIgnore
     @Column(name = "priority")
-    private String priority;
+    private String priority = "Medium";
 
     @JsonIgnore
     @Column(name = "total_amount")

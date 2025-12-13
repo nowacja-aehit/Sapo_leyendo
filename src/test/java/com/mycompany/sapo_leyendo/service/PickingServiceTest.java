@@ -53,7 +53,9 @@ class PickingServiceTest {
         product.setId(1);
         product.setSku("SKU1");
         product.setName("Test Product");
-        product.setIdCategory(1);
+        ProductCategory category = new ProductCategory();
+        category.setId(1);
+        product.setCategory(category);
         product.setIdBaseUom(1);
 
         OutboundOrderItem item = new OutboundOrderItem();
@@ -95,7 +97,9 @@ class PickingServiceTest {
         product.setId(1);
         product.setSku("SKU1");
         product.setName("Test Product");
-        product.setIdCategory(1);
+        ProductCategory category = new ProductCategory();
+        category.setId(1);
+        product.setCategory(category);
         product.setIdBaseUom(1);
 
         OutboundOrderItem item = new OutboundOrderItem();
