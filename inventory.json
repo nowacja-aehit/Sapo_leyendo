@@ -1,0 +1,7 @@
+{
+  "sku": "SKU123",
+  "name": "Test Product",
+  "location": "Zone A",
+  "quantity": 10,
+  "status": "Available"
+}

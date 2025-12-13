@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "Inventory")
 @Data
@@ -41,4 +43,7 @@ public class Inventory {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private InventoryStatus status = InventoryStatus.AVAILABLE;
+    
+    @Column(name = "received_at")
+    private LocalDateTime receivedAt;
 }

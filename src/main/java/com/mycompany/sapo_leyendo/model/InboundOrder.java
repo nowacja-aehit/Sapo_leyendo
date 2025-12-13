@@ -1,6 +1,7 @@
 package com.mycompany.sapo_leyendo.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,16 +21,18 @@ public class InboundOrder {
     private Integer id;
 
     @Column(name = "reference_number", unique = true, nullable = false)
+    @JsonProperty("orderReference")
     private String referenceNumber;
 
     @Column(name = "status", nullable = false)
     private String status; // PLANNED, RECEIVED, CANCELLED
 
     @Column(name = "expected_date")
+    @JsonProperty("expectedArrival")
     private LocalDate expectedDate;
 
-    @Column(name = "supplier_id")
-    private Long supplierId;
+    @Column(name = "supplier")
+    private String supplier;
 
     @Column(name = "dock_id")
     private Integer dockId;

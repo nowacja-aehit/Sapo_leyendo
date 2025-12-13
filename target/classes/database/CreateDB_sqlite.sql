@@ -74,6 +74,8 @@ DROP TABLE IF EXISTS UOM_Conversions;
 DROP TABLE IF EXISTS Inventory;
 DROP TABLE IF EXISTS Products;
 DROP TABLE IF EXISTS Locations;
+DROP TABLE IF EXISTS Zones;
+DROP TABLE IF EXISTS LocationTypes;
 DROP TABLE IF EXISTS UnitOfMeasure;
 DROP TABLE IF EXISTS ProductCategories;
 
@@ -174,7 +176,7 @@ CREATE TABLE Inventory (
     lpn VARCHAR(50) NULL,
     batch_number VARCHAR(100) NULL,
     expiry_date TEXT NULL, -- Używamy TEXT dla dat
-    status TEXT NOT NULL DEFAULT 'Available' CHECK(status IN ('Available', 'Quarantined', 'Damaged', 'Reserved')),
+    status TEXT NOT NULL DEFAULT 'AVAILABLE' CHECK(status IN ('AVAILABLE', 'ALLOCATED', 'QC_HOLD', 'BLOCKED', 'DAMAGED')),
     received_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
     
     FOREIGN KEY (id_product) REFERENCES Products(id_product) ON DELETE RESTRICT,
@@ -189,31 +191,58 @@ CREATE TABLE Inventory (
 -- SEKCJA 4: PROCESY - PRZYJĘCIA I WYDANIA
 -- ########################################
 
-DROP TABLE IF EXISTS OrderLines;
-DROP TABLE IF EXISTS WmsOrders;
+DROP TABLE IF EXISTS InboundOrderItems;
+DROP TABLE IF EXISTS InboundOrders;
+DROP TABLE IF EXISTS OutboundOrderItems;
+DROP TABLE IF EXISTS OutboundOrders;
 DROP TABLE IF EXISTS ReceiptLines;
 DROP TABLE IF EXISTS GoodsReceived;
 
--- Tabela `WmsOrders` (Zlecenia Wydania - Nagłówek)
-CREATE TABLE WmsOrders (
-    id_order INTEGER PRIMARY KEY AUTOINCREMENT,
-    order_reference VARCHAR(100) UNIQUE NOT NULL,
+-- Tabela `InboundOrders`
+CREATE TABLE InboundOrders (
+    id_inbound_order INTEGER PRIMARY KEY AUTOINCREMENT,
+    reference_number VARCHAR(100) UNIQUE NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PLANNED' CHECK(status IN ('PLANNED', 'RECEIVED', 'CANCELLED')),
+    expected_date TEXT NULL,
+    supplier VARCHAR(255) NULL,
+    dock_id INTEGER NULL,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now'))
+);
+
+-- Tabela `InboundOrderItems`
+CREATE TABLE InboundOrderItems (
+    id_inbound_order_item INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_inbound_order INTEGER NOT NULL,
+    id_product INTEGER NOT NULL,
+    quantity_expected INTEGER NOT NULL,
+    quantity_received INTEGER NOT NULL DEFAULT 0,
+    batch_number VARCHAR(100) NULL,
+    FOREIGN KEY (id_inbound_order) REFERENCES InboundOrders(id_inbound_order) ON DELETE CASCADE,
+    FOREIGN KEY (id_product) REFERENCES Products(id_product) ON DELETE RESTRICT
+);
+
+-- Tabela `OutboundOrders` (Zlecenia Wydania - Nagłówek)
+CREATE TABLE OutboundOrders (
+    id_outbound_order INTEGER PRIMARY KEY AUTOINCREMENT,
+    reference_number VARCHAR(100) UNIQUE NOT NULL,
     status TEXT NOT NULL DEFAULT 'NEW' CHECK(status IN ('NEW', 'ALLOCATED', 'PICKING', 'PACKED', 'SHIPPED', 'CANCELLED')),
+    ship_date TEXT NULL,
+    destination VARCHAR(255) NULL,
     created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
     id_user_created INTEGER NULL,
     FOREIGN KEY (id_user_created) REFERENCES Users(id_user) ON DELETE SET NULL
 );
 
--- Tabela `OrderLines` (Linie Zleceń Wydania)
-CREATE TABLE OrderLines (
-    id_line INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_order INTEGER NOT NULL,
+-- Tabela `OutboundOrderItems` (Linie Zleceń Wydania)
+CREATE TABLE OutboundOrderItems (
+    id_outbound_order_item INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_outbound_order INTEGER NOT NULL,
     id_product INTEGER NOT NULL,
     id_uom INTEGER NOT NULL,
     quantity_ordered REAL NOT NULL,
     quantity_picked REAL NOT NULL DEFAULT 0,
     quantity_shipped REAL NOT NULL DEFAULT 0,
-    FOREIGN KEY (id_order) REFERENCES WmsOrders(id_order) ON DELETE CASCADE,
+    FOREIGN KEY (id_outbound_order) REFERENCES OutboundOrders(id_outbound_order) ON DELETE CASCADE,
     FOREIGN KEY (id_product) REFERENCES Products(id_product) ON DELETE RESTRICT,
     FOREIGN KEY (id_uom) REFERENCES UnitOfMeasure(id_uom) ON DELETE RESTRICT
 );
@@ -253,15 +282,15 @@ DROP TABLE IF EXISTS PickingTasks;
 
 -- Tabela `PickingTasks`
 CREATE TABLE PickingTasks (
-    id_task INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_order_line INTEGER NOT NULL,
+    id_picking_task INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_outbound_order_item INTEGER NOT NULL,
     id_inventory INTEGER NOT NULL,
     quantity_to_pick REAL NOT NULL,
     id_user_assigned INTEGER NULL,
     status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'IN_PROGRESS', 'PICKED', 'CANCELLED')),
     created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
     
-    FOREIGN KEY (id_order_line) REFERENCES OrderLines(id_line) ON DELETE CASCADE,
+    FOREIGN KEY (id_outbound_order_item) REFERENCES OutboundOrderItems(id_outbound_order_item) ON DELETE CASCADE,
     FOREIGN KEY (id_inventory) REFERENCES Inventory(id_inventory) ON DELETE RESTRICT,
     FOREIGN KEY (id_user_assigned) REFERENCES Users(id_user) ON DELETE SET NULL
 );
@@ -270,6 +299,13 @@ CREATE TABLE PickingTasks (
 -- ########################################
 -- SEKCJA 4c: WYSYŁKI I PRZEWOŹNICY
 -- ########################################
+DROP TABLE IF EXISTS RefurbishActions;
+DROP TABLE IF EXISTS RefurbishTasks;
+DROP TABLE IF EXISTS ReturnItems;
+DROP TABLE IF EXISTS RmaRequests;
+DROP TABLE IF EXISTS ParcelItems;
+DROP TABLE IF EXISTS Parcels;
+DROP TABLE IF EXISTS PackingMaterials;
 DROP TABLE IF EXISTS ShipmentLines;
 DROP TABLE IF EXISTS Shipments;
 DROP TABLE IF EXISTS Carriers;
@@ -284,13 +320,16 @@ CREATE TABLE Carriers (
 -- Tabela `Shipments`
 CREATE TABLE Shipments (
     id_shipment INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_order INTEGER NOT NULL,
+    id_outbound_order INTEGER NOT NULL,
     id_carrier INTEGER NULL,
+    id_load INTEGER NULL,
     tracking_number VARCHAR(100) NULL,
     shipped_at TEXT NULL, -- Data jako TEXT
-    status TEXT NOT NULL DEFAULT 'PACKING' CHECK(status IN ('PACKING', 'READY_TO_SHIP', 'SHIPPED')),
-    FOREIGN KEY (id_order) REFERENCES WmsOrders(id_order),
-    FOREIGN KEY (id_carrier) REFERENCES Carriers(id_carrier)
+    total_weight_kg REAL NULL,
+    status TEXT NOT NULL DEFAULT 'PACKING' CHECK(status IN ('PACKING', 'PACKED', 'SHIPPED')),
+    FOREIGN KEY (id_outbound_order) REFERENCES OutboundOrders(id_outbound_order),
+    FOREIGN KEY (id_carrier) REFERENCES Carriers(id_carrier),
+    FOREIGN KEY (id_load) REFERENCES TransportLoads(id_load)
 );
 
 -- Tabela `ShipmentLines`
@@ -303,6 +342,79 @@ CREATE TABLE ShipmentLines (
     FOREIGN KEY (id_shipment) REFERENCES Shipments(id_shipment) ON DELETE CASCADE,
     FOREIGN KEY (id_inventory) REFERENCES Inventory(id_inventory),
     FOREIGN KEY (id_product) REFERENCES Products(id_product)
+);
+
+-- Tabela `PackingMaterials`
+CREATE TABLE PackingMaterials (
+    id_packing_material INTEGER PRIMARY KEY AUTOINCREMENT,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    widthCm REAL,
+    heightCm REAL,
+    lengthCm REAL,
+    tareWeightKg REAL,
+    maxWeightKg REAL
+);
+
+-- Tabela `Parcels`
+CREATE TABLE Parcels (
+    id_parcel INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_shipment INTEGER NOT NULL,
+    id_packing_material INTEGER,
+    weight_kg REAL,
+    tracking_sub_number VARCHAR(100),
+    FOREIGN KEY (id_shipment) REFERENCES Shipments(id_shipment) ON DELETE CASCADE,
+    FOREIGN KEY (id_packing_material) REFERENCES PackingMaterials(id_packing_material)
+);
+
+-- Tabela `ParcelItems`
+CREATE TABLE ParcelItems (
+    id_parcel_item INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_parcel INTEGER NOT NULL,
+    id_product INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    FOREIGN KEY (id_parcel) REFERENCES Parcels(id_parcel) ON DELETE CASCADE,
+    FOREIGN KEY (id_product) REFERENCES Products(id_product)
+);
+
+
+-- ########################################
+-- SEKCJA 4d: ZWROTY
+-- ########################################
+
+CREATE TABLE RmaRequests (
+    id_rma INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_outbound_order INTEGER NOT NULL,
+    customer_reason TEXT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'APPROVED', 'RECEIVED', 'COMPLETED', 'REJECTED')),
+    tracking_number_in VARCHAR(100) NULL,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    FOREIGN KEY (id_outbound_order) REFERENCES OutboundOrders(id_outbound_order) ON DELETE CASCADE
+);
+
+CREATE TABLE ReturnItems (
+    id_return_item INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_rma INTEGER NOT NULL,
+    id_product INTEGER NOT NULL,
+    serial_number VARCHAR(100) NULL,
+    grading_status TEXT NULL CHECK(grading_status IN ('GRADE_A', 'GRADE_B', 'GRADE_C', 'SCRAP')),
+    disposition TEXT NULL CHECK(disposition IN ('RESTOCK', 'REFURBISH', 'VENDOR', 'TRASH')),
+    inspector_comment TEXT NULL,
+    FOREIGN KEY (id_rma) REFERENCES RmaRequests(id_rma) ON DELETE CASCADE,
+    FOREIGN KEY (id_product) REFERENCES Products(id_product) ON DELETE RESTRICT
+);
+
+CREATE TABLE RefurbishTasks (
+    id_task INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_return_item INTEGER NOT NULL UNIQUE,
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK(status IN ('OPEN', 'IN_PROGRESS', 'DONE')),
+    FOREIGN KEY (id_return_item) REFERENCES ReturnItems(id_return_item) ON DELETE CASCADE
+);
+
+CREATE TABLE RefurbishActions (
+    id_action INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_task INTEGER NOT NULL,
+    action TEXT NOT NULL,
+    FOREIGN KEY (id_task) REFERENCES RefurbishTasks(id_task) ON DELETE CASCADE
 );
 
 
@@ -342,16 +454,17 @@ PRAGMA foreign_keys = ON;
 -- ########################################
 
 CREATE INDEX IF NOT EXISTS idx_products_sku ON Products(sku);
-CREATE INDEX IF NOT EXISTS idx_locations_code ON Locations(location_code);
+CREATE INDEX IF NOT EXISTS idx_locations_code ON Locations(barcode);
 CREATE INDEX IF NOT EXISTS idx_inventory_product ON Inventory(id_product);
 CREATE INDEX IF NOT EXISTS idx_inventory_location ON Inventory(id_location);
 CREATE INDEX IF NOT EXISTS idx_inventory_lpn ON Inventory(lpn);
 CREATE INDEX IF NOT EXISTS idx_transactions_product ON InventoryTransactions(id_product);
 CREATE INDEX IF NOT EXISTS idx_transactions_time ON InventoryTransactions(timestamp);
 CREATE INDEX IF NOT EXISTS idx_transactions_reference ON InventoryTransactions(reference_type, reference_id);
-CREATE INDEX IF NOT EXISTS idx_picking_tasks_order_line ON PickingTasks(id_order_line);
+CREATE INDEX IF NOT EXISTS idx_picking_tasks_order_line ON PickingTasks(id_outbound_order_item);
 CREATE INDEX IF NOT EXISTS idx_picking_tasks_inventory ON PickingTasks(id_inventory);
 CREATE INDEX IF NOT EXISTS idx_picking_tasks_status ON PickingTasks(status);
-CREATE INDEX IF NOT EXISTS idx_shipments_order ON Shipments(id_order);
+CREATE INDEX IF NOT EXISTS idx_shipments_order ON Shipments(id_outbound_order);
 CREATE INDEX IF NOT EXISTS idx_shipments_carrier ON Shipments(id_carrier);
+CREATE INDEX IF NOT EXISTS idx_shipments_load ON Shipments(id_load);
 CREATE INDEX IF NOT EXISTS idx_shipment_lines_shipment ON ShipmentLines(id_shipment);

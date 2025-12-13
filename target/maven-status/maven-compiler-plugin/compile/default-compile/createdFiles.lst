@@ -23,6 +23,7 @@ com\mycompany\sapo_leyendo\repository\UserRepository.class
 com\mycompany\sapo_leyendo\controller\LocationController.class
 com\mycompany\sapo_leyendo\model\MoveTask.class
 com\mycompany\sapo_leyendo\model\PickTaskStatus.class
+com\mycompany\sapo_leyendo\repository\PickingTaskRepository.class
 com\mycompany\sapo_leyendo\controller\ProductController.class
 com\mycompany\sapo_leyendo\controller\OutboundController.class
 com\mycompany\sapo_leyendo\model\InspectionSourceType.class
@@ -59,7 +60,6 @@ com\mycompany\sapo_leyendo\repository\StockCountSessionRepository.class
 com\mycompany\sapo_leyendo\model\TransportLoad.class
 com\mycompany\sapo_leyendo\controller\PackingController.class
 com\mycompany\sapo_leyendo\service\ReturnsService.class
-com\mycompany\sapo_leyendo\controller\PickingController.class
 com\mycompany\sapo_leyendo\model\Role.class
 com\mycompany\sapo_leyendo\model\AuditLog.class
 com\mycompany\sapo_leyendo\model\RefurbishTask.class
@@ -100,6 +100,7 @@ com\mycompany\sapo_leyendo\model\Wave.class
 com\mycompany\sapo_leyendo\repository\PickListRepository.class
 com\mycompany\sapo_leyendo\repository\QcInspectionRepository.class
 com\mycompany\sapo_leyendo\model\ReportDefinition.class
+com\mycompany\sapo_leyendo\model\PickingTaskStatus.class
 com\mycompany\sapo_leyendo\model\Product.class
 com\mycompany\sapo_leyendo\model\StockCountType.class
 com\mycompany\sapo_leyendo\dto\LoginRequest.class
@@ -112,6 +113,7 @@ com\mycompany\sapo_leyendo\controller\SpaController.class
 com\mycompany\sapo_leyendo\model\VisualizationType.class
 com\mycompany\sapo_leyendo\model\Zone.class
 com\mycompany\sapo_leyendo\model\GoodsReceived.class
+com\mycompany\sapo_leyendo\model\PickingTask.class
 com\mycompany\sapo_leyendo\dto\MoveTaskRequest.class
 com\mycompany\sapo_leyendo\model\WaveStatus.class
 com\mycompany\sapo_leyendo\repository\LocationTypeRepository.class

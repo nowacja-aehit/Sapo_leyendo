@@ -196,28 +196,40 @@ INSERT INTO Products (sku, name, id_category, id_base_uom, weight_kg, length_cm,
 ('TV-SAM-55Q', 'Telewizor Samsung 55" QLED', 5, 1, 25.0, 140, 80, 15),
 ('MIK-SAM-1000W', 'Mikrofalówka Samsung 1000W', 11, 1, 12.0, 50, 40, 35);
 
-/*
--- Tabela `UOM_Conversions` (Przeliczniki JEDNOSTEK MIAR)
--- ...
--- Tabela `WmsOrders` (Zlecenia Wydania) - 10 rekordów
--- ...
--- Tabela `GoodsReceived` (Zlecenia Przyjęcia) - 10 rekordów
--- ...
--- Tabela `OrderLines` (Linie Zleceń Wydania)
--- ...
--- Tabela `ReceiptLines` (Linie Zleceń Przyjęcia)
--- ...
--- Tabela `Inventory` (Stany Magazynowe - SALDO)
--- ...
--- Tabela `PickingTasks` (Zadania Kompletacji / Alokacje)
--- ...
--- Tabela `Shipments` (Przesyłki / Paczki)
--- ...
--- Tabela `ShipmentLines` (Zawartość Przesyłek)
--- ...
--- Tabela `InventoryTransactions` (Dziennik Operacji)
--- ...
-*/
+-- Tabela `OutboundOrders`
+INSERT INTO OutboundOrders (reference_number, status, ship_date, destination, id_user_created) VALUES
+('ORD-2025-001', 'NEW', '2025-12-20 00:00:00.000', 'Warsaw, Poland', 1),
+('ORD-2025-002', 'PICKING', '2025-12-21 00:00:00.000', 'Berlin, Germany', 1),
+('ORD-2025-003', 'SHIPPED', '2025-12-10 00:00:00.000', 'Paris, France', 1);
+
+-- Tabela `OutboundOrderItems`
+INSERT INTO OutboundOrderItems (id_outbound_order, id_product, id_uom, quantity_ordered, quantity_picked, quantity_shipped) VALUES
+(1, 1, 1, 2, 0, 0), -- 2x Laptop Dell
+(1, 9, 1, 2, 0, 0), -- 2x HDMI Cable
+(2, 2, 1, 5, 2, 0), -- 5x iPhone 15
+(3, 14, 1, 1, 1, 1); -- 1x TV Samsung
+
+-- Tabela `InboundOrders`
+INSERT INTO InboundOrders (reference_number, status, expected_date, supplier, dock_id) VALUES
+('INB-2025-001', 'PLANNED', '2025-12-25 00:00:00.000', 'Acme Corp', 1),
+('INB-2025-002', 'RECEIVED', '2025-12-20 00:00:00.000', 'Global Supplies', 2);
+
+-- Tabela `InboundOrderItems`
+INSERT INTO InboundOrderItems (id_inbound_order, id_product, quantity_expected, quantity_received) VALUES
+(1, 1, 10, 0),
+(1, 2, 5, 0),
+(2, 3, 20, 20);
+
+-- Tabela `Inventory`
+INSERT INTO Inventory (id_product, id_location, id_uom, quantity, status) VALUES
+(1, 7, 1, 10, 'AVAILABLE'), -- Laptops in A-01-01
+(2, 7, 1, 20, 'AVAILABLE'), -- iPhones in A-01-01
+(9, 8, 1, 50, 'AVAILABLE'), -- HDMI Cables in A-01-02
+(14, 9, 1, 5, 'AVAILABLE'); -- TVs in A-02-01
+
+-- Tabela `Shipments`
+INSERT INTO Shipments (id_outbound_order, id_carrier, tracking_number, shipped_at, status) VALUES
+(3, 1, 'DHL-123456789', '2025-12-10 10:00:00.000', 'SHIPPED');
 
 -- Zakończenie skryptu
 PRAGMA foreign_keys = ON; -- Włączamy z powrotem sprawdzanie kluczy

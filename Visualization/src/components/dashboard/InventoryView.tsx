@@ -6,6 +6,7 @@ import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { InventoryItem } from "../../data/mockData";
 import { fetchInventory, createInventoryItem, updateInventoryItem } from "../../services/api";
+import { getAllLocations, Location } from "../../services/locationService";
 import {
   Select,
   SelectContent,
@@ -30,9 +31,11 @@ export function InventoryView() {
   const [editFormData, setEditFormData] = useState<InventoryItem | null>(null);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [locations, setLocations] = useState<Location[]>([]);
 
   useEffect(() => {
     loadData();
+    loadLocations();
   }, []);
 
   const loadData = async () => {
@@ -40,10 +43,27 @@ export function InventoryView() {
     setItems(data);
   };
 
+  const loadLocations = async () => {
+    try {
+      const data = await getAllLocations();
+      setLocations(data);
+    } catch (error) {
+      console.error("Failed to load locations", error);
+      setLocations([]);
+    }
+  };
+
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === "all" || item.status === filterStatus;
+    const normalizedTerm = searchTerm.trim().toLowerCase();
+    const name = (item.name ?? "").toLowerCase();
+    const sku = (item.sku ?? "").toLowerCase();
+    const status = item.status ?? "";
+
+    const matchesSearch =
+      normalizedTerm.length === 0 ||
+      name.includes(normalizedTerm) ||
+      sku.includes(normalizedTerm);
+    const matchesFilter = filterStatus === "all" || status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
@@ -310,12 +330,19 @@ export function InventoryView() {
                 <Label htmlFor="location" className="text-right">
                   Lokalizacja
                 </Label>
-                <Input
-                  id="location"
+                <Select
                   value={editFormData.location}
-                  onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
-                  className="col-span-3"
-                />
+                  onValueChange={(value) => setEditFormData({ ...editFormData, location: value })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Wybierz lokalizację" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((loc) => (
+                      <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="reorderLevel" className="text-right">

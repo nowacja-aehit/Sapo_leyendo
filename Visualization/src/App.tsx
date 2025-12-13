@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
 import { Services } from "./components/Services";
@@ -10,8 +10,14 @@ import { LoginPage } from "./components/LoginPage";
 import { Dashboard } from "./components/Dashboard";
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => localStorage.getItem("viz_isLoggedIn") === "true"
+  );
   const [showLogin, setShowLogin] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("viz_isLoggedIn", isLoggedIn ? "true" : "false");
+  }, [isLoggedIn]);
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -20,6 +26,7 @@ export default function App() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    localStorage.removeItem("viz_isLoggedIn");
   };
 
   const handleGetStarted = () => {

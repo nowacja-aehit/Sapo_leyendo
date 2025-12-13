@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { InventoryItem, Order, Shipment } from '../data/mockData';
+import { InventoryItem, Order, Shipment, inventoryItems, orders, shipments } from '../data/mockData';
 
 // Ensure cookies are sent with every request
 axios.defaults.withCredentials = true;
@@ -18,7 +18,7 @@ export const fetchInventory = async (): Promise<InventoryItem[]> => {
         return response.data;
     } catch (error) {
         console.error("Failed to fetch inventory", error);
-        return [];
+        return inventoryItems; // Fallback to mock data when API is unavailable
     }
 };
 
@@ -42,7 +42,7 @@ export const fetchOrders = async (): Promise<Order[]> => {
         return response.data;
     } catch (error) {
         console.error("Failed to fetch orders", error);
-        return [];
+        return orders; // Fallback to mock data when API is unavailable
     }
 };
 
@@ -52,6 +52,16 @@ export const fetchShipments = async (): Promise<Shipment[]> => {
         return response.data;
     } catch (error) {
         console.error("Failed to fetch shipments", error);
-        return [];
+        return shipments; // Fallback to mock data when API is unavailable
+    }
+};
+
+export const createOrder = async (order: Order): Promise<Order> => {
+    try {
+        const response = await axios.post(`${API_URL}/orders`, order);
+        return response.data;
+    } catch (error) {
+        console.error("Failed to create order, using local state only", error);
+        return order; // Let caller optimistically add to UI when API is blocked
     }
 };

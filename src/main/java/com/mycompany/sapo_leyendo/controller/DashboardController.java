@@ -16,20 +16,26 @@ import com.mycompany.sapo_leyendo.repository.CarrierRepository;
 import com.mycompany.sapo_leyendo.repository.ProductRepository;
 import com.mycompany.sapo_leyendo.repository.LocationRepository;
 import com.mycompany.sapo_leyendo.repository.InventoryRepository;
-import com.mycompany.sapo_leyendo.repository.UnitOfMeasureRepository;
-import com.mycompany.sapo_leyendo.model.UnitOfMeasure;
+import com.mycompany.sapo_leyendo.repository.OutboundOrderRepository;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/dashboard")
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"}, allowCredentials = "true")
 public class DashboardController {
+
+    private static final Logger logger = LoggerFactory.getLogger(DashboardController.class);
 
     @Autowired
     private InventoryService inventoryService;
@@ -53,131 +59,72 @@ public class DashboardController {
     private InventoryRepository inventoryRepository;
 
     @Autowired
-    private UnitOfMeasureRepository uomRepository;
+    private OutboundOrderRepository outboundOrderRepository;
+
+
+    @GetMapping("/shipments")
+    public ResponseEntity<List<Map<String, Object>>> getShipments() {
+        try {
+            List<Shipment> shipments = shipmentRepository.findAll();
+            List<Map<String, Object>> response = shipments.stream().map(shipment -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", shipment.getId());
+                map.put("trackingNumber", shipment.getTrackingNumber());
+                map.put("destination", shipment.getOutboundOrder() != null ? shipment.getOutboundOrder().getDestination() : "Unknown");
+                map.put("carrierId", shipment.getCarrierId());
+                map.put("status", shipment.getStatus().toString());
+                map.put("parcelCount", shipment.getParcels().size());
+                map.put("shippedAt", shipment.getShippedAt() != null ? shipment.getShippedAt().toString() : "N/A");
+                return map;
+            }).collect(Collectors.toList());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error retrieving shipments", e);
+            return ResponseEntity.status(500).build();
+        }
+    }
 
     @GetMapping("/inventory")
-    public List<DashboardInventoryItem> getInventory() {
-        return inventoryService.getAllInventory().stream()
-            .map(inv -> new DashboardInventoryItem(
-                String.valueOf(inv.getId()),
-                inv.getProduct().getName(),
-                inv.getProduct().getSku(),
-                "Category " + inv.getProduct().getIdCategory(), // Simplified
-                inv.getQuantity(),
-                10, // Hardcoded reorder level
-                inv.getLocation().getName(),
-                inv.getStatus().name(),
-                100.0, // Hardcoded price
-                java.time.LocalDate.now().toString() // Hardcoded date
-            ))
-            .collect(Collectors.toList());
-    }
+    public ResponseEntity<List<Map<String, Object>>> getInventory() {
+        List<Inventory> inventoryList = inventoryRepository.findAll();
+        List<Map<String, Object>> response = inventoryList.stream().map(inventory -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", inventory.getId());
 
-    @PostMapping("/inventory")
-    public ResponseEntity<DashboardInventoryItem> createInventoryItem(@RequestBody DashboardInventoryItem item) {
-        // 1. Find or Create Product
-        Product product = productRepository.findBySku(item.sku())
-                .orElseGet(() -> {
-                    Product newProduct = new Product();
-                    newProduct.setSku(item.sku());
-                    newProduct.setName(item.name());
-                    newProduct.setIdBaseUom(1); // Default UOM
-                    return productRepository.save(newProduct);
-                });
+            Product product = inventory.getProduct();
+            if (product != null) {
+                map.put("productName", product.getName());
+                map.put("productSku", product.getSku());
+            }
 
-        // 2. Find Location (or default)
-        Location location = locationRepository.findByName(item.location())
-                .orElseGet(() -> locationRepository.findAll().stream().findFirst().orElseThrow());
+            Location location = inventory.getLocation();
+            if (location != null) {
+                map.put("locationName", location.getName());
+            }
 
-        // 3. Create Inventory
-        Inventory inventory = new Inventory();
-        inventory.setProduct(product);
-        inventory.setLocation(location);
-        
-        UnitOfMeasure uom = uomRepository.findById(product.getIdBaseUom())
-                .orElseThrow(() -> new RuntimeException("UOM not found for ID: " + product.getIdBaseUom()));
-        inventory.setUom(uom);
-
-        inventory.setQuantity(item.quantity());
-        inventory.setStatus(InventoryStatus.AVAILABLE);
-        
-        inventory = inventoryRepository.save(inventory);
-
-        return ResponseEntity.ok(new DashboardInventoryItem(
-                String.valueOf(inventory.getId()),
-                product.getName(),
-                product.getSku(),
-                "Category " + product.getIdCategory(),
-                inventory.getQuantity(),
-                10,
-                location.getName(),
-                inventory.getStatus().name(),
-                100.0,
-                java.time.LocalDate.now().toString()
-        ));
-    }
-
-    @PutMapping("/inventory/{id}")
-    public ResponseEntity<DashboardInventoryItem> updateInventoryItem(@PathVariable Integer id, @RequestBody DashboardInventoryItem item) {
-        Inventory inventory = inventoryRepository.findById(id).orElseThrow();
-        
-        // Update Product info
-        Product product = inventory.getProduct();
-        if (!product.getName().equals(item.name()) || !product.getSku().equals(item.sku())) {
-            product.setName(item.name());
-            product.setSku(item.sku());
-            productRepository.save(product);
-        }
-
-        // Update Inventory info
-        inventory.setQuantity(item.quantity());
-        
-        // Update Location if changed
-        if (!inventory.getLocation().getName().equals(item.location())) {
-             Location location = locationRepository.findByName(item.location())
-                .orElseGet(() -> locationRepository.findAll().stream().findFirst().orElseThrow());
-             inventory.setLocation(location);
-        }
-
-        inventoryRepository.save(inventory);
-
-        return ResponseEntity.ok(item);
-    }
-
-    @DeleteMapping("/inventory/{id}")
-    public ResponseEntity<Void> deleteInventoryItem(@PathVariable Integer id) {
-        inventoryRepository.deleteById(id);
-        return ResponseEntity.ok().build();
+            map.put("quantity", inventory.getQuantity());
+            map.put("status", inventory.getStatus().toString());
+            map.put("batchNumber", inventory.getBatchNumber());
+            map.put("receivedAt", inventory.getReceivedAt() != null ? inventory.getReceivedAt().toString() : "N/A");
+            return map;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/orders")
-    public List<DashboardOrder> getOrders() {
-        return outboundService.getAllOutboundOrders().stream()
-            .map(order -> new DashboardOrder(
-                String.valueOf(order.getId()),
-                order.getReferenceNumber(),
-                order.getDestination(),
-                order.getItems() != null ? order.getItems().size() : 0,
-                0.0, // Hardcoded total
-                order.getStatus(),
-                order.getShipDate() != null ? order.getShipDate().toString() : "",
-                "Medium" // Hardcoded priority
-            ))
-            .collect(Collectors.toList());
-    }
-
-    @GetMapping("/shipments")
-    public List<DashboardShipment> getShipments() {
-        return shipmentRepository.findAll().stream()
-            .map(shipment -> new DashboardShipment(
-                String.valueOf(shipment.getId()),
-                shipment.getTrackingNumber(),
-                shipment.getOutboundOrder() != null ? shipment.getOutboundOrder().getDestination() : "Unknown",
-                shipment.getCarrierId() != null ? "Carrier " + shipment.getCarrierId() : "Unknown",
-                shipment.getStatus() != null ? shipment.getStatus().name() : "Unknown",
-                shipment.getShippedAt() != null ? shipment.getShippedAt().toString() : "",
-                shipment.getParcels() != null ? shipment.getParcels().size() : 0
-            ))
-            .collect(Collectors.toList());
+    public ResponseEntity<List<Map<String, Object>>> getOrders() {
+        List<com.mycompany.sapo_leyendo.model.OutboundOrder> orders = outboundOrderRepository.findAll();
+        List<Map<String, Object>> response = orders.stream().map(order -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", order.getId());
+            map.put("referenceNumber", order.getReferenceNumber());
+            map.put("destination", order.getDestination());
+            map.put("status", order.getStatus());
+            map.put("itemCount", order.getItems().size());
+            map.put("destination", order.getDestination());
+            map.put("createdAt", order.getCreatedAt() != null ? order.getCreatedAt().toString() : "N/A");
+            return map;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 }

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, Download, Eye, Package, User, Calendar, DollarSign } from "lucide-react";
+import { Search, Filter, Download, Eye, Package, User, Calendar, DollarSign, Plus } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Order } from "../../data/mockData";
-import { fetchOrders } from "../../services/api";
+import { fetchOrders, createOrder } from "../../services/api";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,17 @@ export function OrdersView() {
   const [filterPriority, setFilterPriority] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [items, setItems] = useState<Order[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newOrder, setNewOrder] = useState<Order>({
+    id: "",
+    orderNumber: "",
+    customer: "",
+    items: 0,
+    total: 0,
+    status: "Pending",
+    date: new Date().toISOString().split("T")[0],
+    priority: "Medium",
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -38,10 +49,18 @@ export function OrdersView() {
   }, []);
 
   const filteredOrders = items.filter(order => {
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || order.status === filterStatus;
-    const matchesPriority = filterPriority === "all" || order.priority === filterPriority;
+    const normalizedTerm = searchTerm.trim().toLowerCase();
+    const orderNumber = (order.orderNumber ?? "").toLowerCase();
+    const customer = (order.customer ?? "").toLowerCase();
+    const status = order.status ?? "";
+    const priority = order.priority ?? "";
+
+    const matchesSearch =
+      normalizedTerm.length === 0 ||
+      orderNumber.includes(normalizedTerm) ||
+      customer.includes(normalizedTerm);
+    const matchesStatus = filterStatus === "all" || status === filterStatus;
+    const matchesPriority = filterPriority === "all" || priority === filterPriority;
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
@@ -65,6 +84,8 @@ export function OrdersView() {
     }
   };
 
+  const formatCurrency = (value?: number) => `$${(value ?? 0).toLocaleString()}`;
+
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
   };
@@ -74,11 +95,34 @@ export function OrdersView() {
     setFilterPriority("all");
   };
 
+  const handleCreateOrder = async () => {
+    const payload = { ...newOrder, id: crypto.randomUUID() };
+    const created = await createOrder(payload);
+    setItems((prev) => [...prev, created]);
+    setIsDialogOpen(false);
+    setNewOrder({
+      id: "",
+      orderNumber: "",
+      customer: "",
+      items: 0,
+      total: 0,
+      status: "Pending",
+      date: new Date().toISOString().split("T")[0],
+      priority: "Medium",
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-gray-900 mb-2">Zarządzanie zamówieniami</h1>
-        <p className="text-gray-600">Przetwarzaj i śledź zamówienia klientów efektywnie</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-gray-900 mb-2">Zarządzanie zamówieniami</h1>
+          <p className="text-gray-600">Przetwarzaj i śledź zamówienia klientów efektywnie</p>
+        </div>
+        <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
+          <Plus size={18} />
+          Dodaj zamówienie
+        </Button>
       </div>
 
       {/* Filters */}
@@ -145,7 +189,7 @@ export function OrdersView() {
                 Wyczyść filtry
               </Button>
               <div className="text-sm text-gray-600 flex items-center">
-                Znaleziono {filteredOrders.length} z {orders.length} zamówień
+                Znaleziono {filteredOrders.length} z {items.length} zamówień
               </div>
             </div>
           </div>
@@ -199,7 +243,7 @@ export function OrdersView() {
                     <div className="text-sm text-gray-600">{order.items} szt.</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">${order.total.toLocaleString()}</div>
+                    <div className="text-sm text-gray-900">{formatCurrency(order.total)}</div>
                   </td>
                   <td className="px-6 py-4">
                     <Badge variant={getStatusColor(order.status)}>
@@ -310,6 +354,95 @@ export function OrdersView() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nowe zamówienie</DialogTitle>
+            <DialogDescription>Wprowadź podstawowe dane zamówienia</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-2">
+              <label className="text-sm text-gray-700 col-span-1">Numer</label>
+              <Input
+                className="col-span-3"
+                value={newOrder.orderNumber}
+                onChange={(e) => setNewOrder({ ...newOrder, orderNumber: e.target.value })}
+                placeholder="ORD-2025-XXXX"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <label className="text-sm text-gray-700 col-span-1">Klient</label>
+              <Input
+                className="col-span-3"
+                value={newOrder.customer}
+                onChange={(e) => setNewOrder({ ...newOrder, customer: e.target.value })}
+                placeholder="Nazwa klienta"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <label className="text-sm text-gray-700 col-span-1">Produkty</label>
+              <Input
+                className="col-span-3"
+                type="number"
+                value={newOrder.items}
+                onChange={(e) => setNewOrder({ ...newOrder, items: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <label className="text-sm text-gray-700 col-span-1">Kwota</label>
+              <Input
+                className="col-span-3"
+                type="number"
+                step="0.01"
+                value={newOrder.total}
+                onChange={(e) => setNewOrder({ ...newOrder, total: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <label className="text-sm text-gray-700 col-span-1">Status</label>
+              <Select value={newOrder.status} onValueChange={(value) => setNewOrder({ ...newOrder, status: value as Order['status'] })}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Oczekujące</SelectItem>
+                  <SelectItem value="Processing">W trakcie</SelectItem>
+                  <SelectItem value="Shipped">Wysłane</SelectItem>
+                  <SelectItem value="Delivered">Dostarczone</SelectItem>
+                  <SelectItem value="Cancelled">Anulowane</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <label className="text-sm text-gray-700 col-span-1">Priorytet</label>
+              <Select value={newOrder.priority} onValueChange={(value) => setNewOrder({ ...newOrder, priority: value as Order['priority'] })}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="High">Wysoki</SelectItem>
+                  <SelectItem value="Medium">Średni</SelectItem>
+                  <SelectItem value="Low">Niski</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-2">
+              <label className="text-sm text-gray-700 col-span-1">Data</label>
+              <Input
+                className="col-span-3"
+                type="date"
+                value={newOrder.date}
+                onChange={(e) => setNewOrder({ ...newOrder, date: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Anuluj</Button>
+            <Button onClick={handleCreateOrder}>Zapisz</Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

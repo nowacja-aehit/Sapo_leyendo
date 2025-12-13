@@ -3,6 +3,7 @@ import { Box, Printer, CheckCircle, Package } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Card } from "../ui/card";
+import { Badge } from "../ui/badge";
 import { startPacking, createParcel, addItemToParcel, closeShipment, Shipment, Parcel } from "../../services/packingService";
 
 export function PackingView() {

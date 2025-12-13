@@ -9,7 +9,7 @@
             "projectName": "sapo_leyendo",
             "args": "",
             "env": {
-                "SPRING_PROFILES_ACTIVE": "dev"
+                "SPRING_PROFILES_ACTIVE": "default"
             }
         },
         {
