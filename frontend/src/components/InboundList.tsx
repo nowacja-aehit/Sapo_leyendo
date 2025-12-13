@@ -46,7 +46,10 @@ export default function InboundList() {
 
   return (
     <div>
-      <h2>Inbound Orders (Receipts)</h2>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2>Inbound Orders (Receipts)</h2>
+        <Link to="/inbound/new" className="btn btn-primary">Create Inbound Order</Link>
+      </div>
       <table className="table table-striped table-hover">
         <thead className="table-dark">
           <tr>

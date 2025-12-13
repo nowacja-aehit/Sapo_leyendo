@@ -46,6 +46,10 @@ public class InventoryService {
         return inventoryRepository.save(inventory);
     }
 
+    public void deleteInventory(Integer id) {
+        inventoryRepository.deleteById(id);
+    }
+
     // Put-away Logic
     @Transactional
     public MoveTask createPutAwayTask(Integer receiptId) {
@@ -97,6 +101,24 @@ public class InventoryService {
 
     public List<MoveTask> getPendingTasks() {
         return moveTaskRepository.findByStatus(MoveTaskStatus.PENDING);
+    }
+
+    @Transactional
+    public MoveTask createManualMoveTask(Integer inventoryId, Integer targetLocationId) {
+        Inventory inventory = inventoryRepository.findById(inventoryId)
+                .orElseThrow(() -> new RuntimeException("Inventory not found"));
+        Location targetLocation = locationRepository.findById(targetLocationId)
+                .orElseThrow(() -> new RuntimeException("Location not found"));
+
+        MoveTask task = new MoveTask();
+        task.setType(MoveTaskType.INTERNAL_MOVE);
+        task.setInventory(inventory);
+        task.setSourceLocation(inventory.getLocation());
+        task.setTargetLocation(targetLocation);
+        task.setPriority(10);
+        task.setStatus(MoveTaskStatus.PENDING);
+        
+        return moveTaskRepository.save(task);
     }
 
     @Transactional
