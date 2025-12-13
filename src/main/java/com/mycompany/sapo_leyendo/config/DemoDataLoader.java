@@ -245,7 +245,6 @@ public class DemoDataLoader implements CommandLineRunner {
         Product p = new Product();
         p.setSku(sku);
         p.setName(name);
-        p.setIdCategory(categoryId);
         p.setIdBaseUom(uomId);
         p.setWeightKg(weight);
         p.setLengthCm(length);
