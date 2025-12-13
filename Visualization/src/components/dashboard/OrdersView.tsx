@@ -112,6 +112,12 @@ export function OrdersView() {
     });
   };
 
+  const advanceStatus = (order: Order) => {
+    const flow: Order['status'][] = ["Pending", "Processing", "Shipped", "Delivered"];
+    const next = flow[flow.indexOf(order.status) + 1] || order.status;
+    setItems((prev) => prev.map(o => o.id === order.id ? { ...o, status: next } : o));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -262,6 +268,9 @@ export function OrdersView() {
                     <Button variant="ghost" size="sm" className="gap-1" onClick={() => handleViewOrder(order)}>
                       <Eye size={16} />
                       Zobacz
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => advanceStatus(order)}>
+                      Zmień status
                     </Button>
                   </td>
                 </tr>

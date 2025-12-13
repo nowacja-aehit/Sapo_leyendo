@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Truck, Package, MapPin, Calendar, Navigation } from "lucide-react";
+import { Truck, Package, MapPin, Calendar, Navigation, Plus } from "lucide-react";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { Shipment } from "../../data/mockData";
 import { fetchShipments } from "../../services/api";
 import {
@@ -17,6 +18,16 @@ export function ShipmentsView() {
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
   const [trackingView, setTrackingView] = useState<Shipment | null>(null);
   const [items, setItems] = useState<Shipment[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newShipment, setNewShipment] = useState<Shipment>({
+    id: 0,
+    trackingNumber: "",
+    destination: "",
+    carrier: "",
+    status: "Preparing",
+    estimatedDelivery: new Date().toISOString().split("T")[0],
+    items: 0,
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -44,6 +55,27 @@ export function ShipmentsView() {
     setSelectedShipment(shipment);
   };
 
+  const handleAddShipment = () => {
+    const created = { ...newShipment, id: Date.now() };
+    setItems((prev) => [...prev, created]);
+    setIsDialogOpen(false);
+    setNewShipment({
+      id: 0,
+      trackingNumber: "",
+      destination: "",
+      carrier: "",
+      status: "Preparing",
+      estimatedDelivery: new Date().toISOString().split("T")[0],
+      items: 0,
+    });
+  };
+
+  const advanceStatus = (shipment: Shipment) => {
+    const flow: Shipment['status'][] = ["Preparing", "In Transit", "Out for Delivery", "Delivered"];
+    const next = flow[flow.indexOf(shipment.status) + 1] || shipment.status;
+    setItems((prev) => prev.map(s => s.id === shipment.id ? { ...s, status: next } : s));
+  };
+
   const getTrackingSteps = (status: string) => {
     const allSteps = [
       { label: "Przygotowanie", status: "Preparing", completed: true },
@@ -56,9 +88,14 @@ export function ShipmentsView() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-gray-900 mb-2">Śledzenie przesyłek</h1>
-        <p className="text-gray-600">Monitoruj wszystkie przesyłki w czasie rzeczywistym dzięki śledzeniu zasilanemu AI</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-gray-900 mb-2">Śledzenie przesyłek</h1>
+          <p className="text-gray-600">Monitoruj wszystkie przesyłki w czasie rzeczywistym dzięki śledzeniu zasilanemu AI</p>
+        </div>
+        <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
+          <Plus size={16} /> Dodaj przesyłkę
+        </Button>
       </div>
 
       {/* Stats */}
@@ -135,6 +172,9 @@ export function ShipmentsView() {
               </Button>
               <Button variant="outline" size="sm" className="flex-1" onClick={() => handleDetails(shipment)}>
                 Szczegóły
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => advanceStatus(shipment)}>
+                Aktualizuj status
               </Button>
             </div>
           </Card>
@@ -287,6 +327,47 @@ export function ShipmentsView() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dodaj przesyłkę</DialogTitle>
+            <DialogDescription>Rejestruj przesyłki nawet gdy backend jest niedostępny</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 py-4">
+            <Input
+              placeholder="Numer śledzenia"
+              value={newShipment.trackingNumber}
+              onChange={(e) => setNewShipment({ ...newShipment, trackingNumber: e.target.value })}
+            />
+            <Input
+              placeholder="Przeznaczenie"
+              value={newShipment.destination}
+              onChange={(e) => setNewShipment({ ...newShipment, destination: e.target.value })}
+            />
+            <Input
+              placeholder="Przewoźnik"
+              value={newShipment.carrier}
+              onChange={(e) => setNewShipment({ ...newShipment, carrier: e.target.value })}
+            />
+            <Input
+              type="date"
+              value={newShipment.estimatedDelivery}
+              onChange={(e) => setNewShipment({ ...newShipment, estimatedDelivery: e.target.value })}
+            />
+            <Input
+              type="number"
+              placeholder="Liczba produktów"
+              value={newShipment.items}
+              onChange={(e) => setNewShipment({ ...newShipment, items: Number(e.target.value) })}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Anuluj</Button>
+            <Button onClick={handleAddShipment}>Zapisz</Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

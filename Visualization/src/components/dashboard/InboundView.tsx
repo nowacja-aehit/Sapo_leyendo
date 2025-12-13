@@ -29,6 +29,7 @@ export function InboundView() {
     supplier: "",
     expectedArrival: new Date().toISOString().split("T")[0],
   });
+  const [newItems, setNewItems] = useState<Array<{ productName: string; sku: string; expectedQuantity: number }>>([]);
 
   useEffect(() => {
     loadData();
@@ -84,7 +85,13 @@ export function InboundView() {
       const created = await createInboundOrder({
         ...newOrder,
         status: "PLANNED",
-        items: [],
+        items: newItems.map((item, idx) => ({
+          id: Date.now() + idx,
+          productName: item.productName,
+          sku: item.sku,
+          expectedQuantity: item.expectedQuantity,
+          receivedQuantity: 0,
+        })),
       });
       setOrders((prev) => [...prev, created]);
       setIsCreating(false);
@@ -93,6 +100,7 @@ export function InboundView() {
         supplier: "",
         expectedArrival: new Date().toISOString().split("T")[0],
       });
+      setNewItems([]);
     } catch (error) {
       console.error("Failed to create inbound order", error);
       // Optimistic UI so user sees the record even when API is blocked
@@ -102,7 +110,13 @@ export function InboundView() {
         supplier: newOrder.supplier,
         expectedArrival: newOrder.expectedArrival,
         status: "PLANNED",
-        items: [],
+        items: newItems.map((item, idx) => ({
+          id: Date.now() + idx,
+          productName: item.productName,
+          sku: item.sku,
+          expectedQuantity: item.expectedQuantity,
+          receivedQuantity: 0,
+        })),
       } as InboundOrder;
       setOrders((prev) => [...prev, fallback]);
       setIsCreating(false);
@@ -276,6 +290,48 @@ export function InboundView() {
                   value={newOrder.expectedArrival}
                   onChange={(e) => setNewOrder({ ...newOrder, expectedArrival: e.target.value })}
                 />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Pozycje</Label>
+                <Button variant="outline" size="sm" onClick={() => setNewItems([...newItems, { productName: "", sku: "", expectedQuantity: 1 }])}>Dodaj pozycję</Button>
+              </div>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {newItems.length === 0 && <p className="text-sm text-gray-500">Brak pozycji. Dodaj co najmniej jedną.</p>}
+                {newItems.map((item, idx) => (
+                  <div key={idx} className="grid grid-cols-3 gap-2">
+                    <Input
+                      placeholder="Nazwa"
+                      value={item.productName}
+                      onChange={(e) => {
+                        const copy = [...newItems];
+                        copy[idx].productName = e.target.value;
+                        setNewItems(copy);
+                      }}
+                    />
+                    <Input
+                      placeholder="SKU"
+                      value={item.sku}
+                      onChange={(e) => {
+                        const copy = [...newItems];
+                        copy[idx].sku = e.target.value;
+                        setNewItems(copy);
+                      }}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Ilość"
+                      value={item.expectedQuantity}
+                      onChange={(e) => {
+                        const copy = [...newItems];
+                        copy[idx].expectedQuantity = Number(e.target.value);
+                        setNewItems(copy);
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>

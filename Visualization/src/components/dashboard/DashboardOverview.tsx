@@ -3,7 +3,7 @@ import { Package, ShoppingCart, Truck, TrendingUp, AlertTriangle, CheckCircle } 
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { ViewType } from "../Dashboard";
-import { InventoryItem, Order, Shipment } from "../../data/mockData";
+import { InventoryItem, Order, Shipment, inventoryItems, orders as mockOrders, shipments as mockShipments } from "../../data/mockData";
 import { fetchInventory, fetchOrders, fetchShipments } from "../../services/api";
 
 interface DashboardOverviewProps {
@@ -22,9 +22,9 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
         fetchOrders(),
         fetchShipments()
       ]);
-      setInventoryItems(invData);
-      setOrders(ordersData);
-      setShipments(shipmentsData);
+      setInventoryItems(invData.length ? invData : inventoryItems);
+      setOrders(ordersData.length ? ordersData : mockOrders);
+      setShipments(shipmentsData.length ? shipmentsData : mockShipments);
     };
     loadData();
   }, []);

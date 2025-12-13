@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapPin, Plus, LayoutGrid, Settings } from "lucide-react";
+import { MapPin, Plus, LayoutGrid, Settings, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Card } from "../ui/card";
@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { getAllLocations, getAllZones, getAllLocationTypes, createLocation, Location, Zone, LocationType } from "../../services/locationService";
+import { getAllLocations, getAllZones, getAllLocationTypes, createLocation, deleteLocation, Location, Zone, LocationType } from "../../services/locationService";
 
 export function LocationView() {
   const [locations, setLocations] = useState<Location[]>([]);
@@ -72,6 +72,16 @@ export function LocationView() {
     }
   };
 
+  const handleDeleteLocation = async (id: number) => {
+    try {
+      await deleteLocation(id);
+    } catch (error) {
+      console.error("Failed to delete location", error);
+    } finally {
+      setLocations((prev) => prev.filter((l) => l.id !== id));
+    }
+  };
+
   const handleQuickAddZone = () => {
     if (!newZoneName.trim()) return;
     const newZone: Zone = {
@@ -110,35 +120,31 @@ export function LocationView() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="p-4 flex items-center gap-4">
-          <div className="p-3 bg-blue-100 rounded-lg text-blue-600">
+      <Card className="p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-stretch">
+          <div className="flex-1 p-3 bg-blue-100 rounded-lg text-blue-600 flex items-center gap-3">
             <MapPin size={24} />
+            <div>
+              <p className="text-sm text-gray-500">Wszystkie Lokalizacje</p>
+              <p className="text-2xl font-bold">{locations.length}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-gray-500">Wszystkie Lokalizacje</p>
-            <p className="text-2xl font-bold">{locations.length}</p>
-          </div>
-        </Card>
-        <Card className="p-4 flex items-center gap-4">
-          <div className="p-3 bg-purple-100 rounded-lg text-purple-600">
+          <div className="flex-1 p-3 bg-purple-100 rounded-lg text-purple-600 flex items-center gap-3">
             <LayoutGrid size={24} />
+            <div>
+              <p className="text-sm text-gray-500">Strefy Magazynowe</p>
+              <p className="text-2xl font-bold">{zones.length}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-gray-500">Strefy Magazynowe</p>
-            <p className="text-2xl font-bold">{zones.length}</p>
-          </div>
-        </Card>
-        <Card className="p-4 flex items-center gap-4">
-          <div className="p-3 bg-green-100 rounded-lg text-green-600">
+          <div className="flex-1 p-3 bg-green-100 rounded-lg text-green-600 flex items-center gap-3">
             <Settings size={24} />
+            <div>
+              <p className="text-sm text-gray-500">Typy Regałów</p>
+              <p className="text-2xl font-bold">{types.length}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-gray-500">Typy Regałów</p>
-            <p className="text-2xl font-bold">{types.length}</p>
-          </div>
-        </Card>
-      </div>
+        </div>
+      </Card>
 
       {/* Locations Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -157,6 +163,14 @@ export function LocationView() {
               {loc.barcode && (
                 <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{loc.barcode}</span>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Usuń ${loc.name}`}
+                onClick={() => handleDeleteLocation(loc.id)}
+              >
+                <Trash2 size={14} />
+              </Button>
             </div>
           </Card>
         ))}

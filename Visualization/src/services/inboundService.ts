@@ -41,7 +41,22 @@ export const fetchInboundOrders = async (): Promise<InboundOrder[]> => {
                 expectedArrival: new Date().toISOString(),
                 status: "PLANNED",
                 supplier: "ACME Sp. z o.o.",
-                items: [],
+                items: [
+                    {
+                        id: 11,
+                        productName: "Wireless Mouse",
+                        sku: "WM-045",
+                        expectedQuantity: 120,
+                        receivedQuantity: 40,
+                    },
+                    {
+                        id: 12,
+                        productName: "USB-C Cable",
+                        sku: "UCC-100",
+                        expectedQuantity: 200,
+                        receivedQuantity: 0,
+                    },
+                ],
             },
         ];
     }

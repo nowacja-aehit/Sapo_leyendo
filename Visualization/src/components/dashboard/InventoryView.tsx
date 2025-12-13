@@ -32,6 +32,8 @@ export function InventoryView() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   useEffect(() => {
     loadData();
@@ -41,6 +43,8 @@ export function InventoryView() {
   const loadData = async () => {
     const data = await fetchInventory();
     setItems(data);
+    const uniqueCategories = Array.from(new Set(data.map(i => i.category).filter(Boolean)));
+    setCategories(uniqueCategories.length ? uniqueCategories : ["Electronics", "Accessories", "Bags"]);
   };
 
   const loadLocations = async () => {
@@ -88,7 +92,7 @@ export function InventoryView() {
       id: "",
       name: "",
       sku: "",
-      category: "",
+      category: categories[0] || "",
       quantity: 0,
       reorderLevel: 10,
       location: "",
@@ -123,6 +127,16 @@ export function InventoryView() {
     setEditingItem(null);
     setEditFormData(null);
     setIsAddingNew(false);
+  };
+
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) return;
+    const value = newCategoryName.trim();
+    setCategories((prev) => Array.from(new Set([...prev, value])));
+    if (editFormData) {
+      setEditFormData({ ...editFormData, category: value });
+    }
+    setNewCategoryName("");
   };
 
   return (
@@ -300,6 +314,35 @@ export function InventoryView() {
                   onChange={(e) => setEditFormData({ ...editFormData, sku: e.target.value })}
                   className="col-span-3"
                 />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="category" className="text-right">
+                  Kategoria
+                </Label>
+                <Select
+                  value={editFormData.category}
+                  onValueChange={(value) => setEditFormData({ ...editFormData, category: value })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Wybierz kategorię" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span />
+                <div className="col-span-3 flex gap-2">
+                  <Input
+                    placeholder="Dodaj nową kategorię"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                  />
+                  <Button variant="outline" onClick={handleAddCategory}>Dodaj</Button>
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="quantity" className="text-right">
