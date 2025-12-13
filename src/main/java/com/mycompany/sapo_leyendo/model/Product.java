@@ -1,9 +1,13 @@
 package com.mycompany.sapo_leyendo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "Products")
@@ -25,8 +29,10 @@ public class Product {
 
     private String description;
 
-    @Column(name = "id_category")
-    private Integer idCategory;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_category")
+    @JsonIgnore
+    private ProductCategory category;
 
     @Column(name = "id_base_uom", nullable = false)
     private Integer idBaseUom;
@@ -42,4 +48,20 @@ public class Product {
 
     @Column(name = "height_cm")
     private Double heightCm;
+
+    @Column(name = "unit_price")
+    private BigDecimal unitPrice;
+
+    @Column(name = "min_stock_level")
+    private Integer minStockLevel;
+
+    @JsonProperty("category")
+    public String getCategoryName() {
+        return category != null ? category.getName() : null;
+    }
+
+    @JsonProperty("price")
+    public BigDecimal getPriceValue() {
+        return unitPrice;
+    }
 }
