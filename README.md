@@ -66,3 +66,26 @@ Domyślne konto administratora:
 
 Projekt wykorzystuje wbudowaną bazę danych SQLite. Plik bazy danych `sapo_wms_main.db` tworzony jest automatycznie w katalogu `data/` przy pierwszym uruchomieniu.
 Dane początkowe są ładowane z pliku `src/main/resources/database/FillDatabase_sqlite.sql`.
+
+## Deployment na Azure (ARM)
+
+W katalogu `Desktop` są gotowe pliki szablonu i parametrów ARM do wdrożenia Web App + MySQL z OIDC:
+
+- `template.json` – definicja zasobów (App Service, plan, VNet, Private Endpoint, MySQL Flexible Server, Managed Identity z federacją GitHub Actions).
+- `parameters.json` – przykładowe wartości (subskrypcja, RG, nazwy zasobów, region `Poland Central`, plan B1, runtime `JAVA|21-java21`).
+
+Jak wdrożyć (az CLI):
+
+```bash
+az deployment group create \
+    --subscription <SUBSCRIPTION_ID> \
+    --resource-group Studia \
+    --template-file template.json \
+    --parameters @parameters.json \
+    --parameters mySqlServerAdminPwd="<silne_haslo>"
+```
+
+Ważne:
+- Uzupełnij `mySqlServerAdminPwd` (SecureString) przed uruchomieniem.
+- Repozytorium i branch do CI/CD ustawione w parametrach (`repoUrl`, `branch`).
+- Domyślne nazwy VNet/subnet/PE w szablonie są generowane; parametry zawierają konkretne wartości z przykładu.
