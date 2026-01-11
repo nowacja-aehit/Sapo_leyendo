@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -26,13 +27,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for simplicity in this API-centric app
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // Allow login/logout
                 .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll() // Allow static resources
-                .requestMatchers("/api/**").authenticated() // Protect other API endpoints
+                .requestMatchers("/api/**").permitAll() // Allow all API endpoints for development
                 .anyRequest().permitAll() // Allow everything else (frontend routes handled by client)
             )
             .exceptionHandling(e -> e

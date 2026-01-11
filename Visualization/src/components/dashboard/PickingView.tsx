@@ -23,8 +23,9 @@ export function PickingView() {
   // Load available orders for wave creation
   const loadOrders = async () => {
     const orders = await fetchOrders();
-    // Filter for orders that are ready to be picked (e.g., status 'PENDING')
-    setAvailableOrders(orders.filter(o => o.status === 'Pending'));
+    // Filter for orders that are ready to be picked (NEW, PLANNED, or Pending)
+    const pickableStatuses = ['PLANNED', 'NEW', 'Pending', 'pending', 'PENDING'];
+    setAvailableOrders(orders.filter(o => pickableStatuses.includes(o.status)));
   };
 
   const handleCreateWave = async () => {
@@ -39,11 +40,11 @@ export function PickingView() {
     } catch (error) {
       console.error("Failed to create wave", error);
       // Fallback: create mock tasks if backend blocked
-      const mockWave = { id: crypto.randomUUID(), status: 'IN_PROGRESS', createdAt: new Date().toISOString() } as Wave;
+      const mockWave = { id: Math.floor(Math.random() * 10000), status: 'IN_PROGRESS', createdAt: new Date().toISOString() } as Wave;
       setActiveWave(mockWave);
       setTasks([
         {
-          id: crypto.randomUUID(),
+          id: 1,
           waveId: mockWave.id,
           sourceLocationId: 101,
           targetLpn: 'LPN-LOCAL-1',

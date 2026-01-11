@@ -29,17 +29,18 @@ public class ShippingService {
     private OutboundOrderRepository outboundOrderRepository;
 
     @Transactional
-    public TransportLoad createLoad(Integer carrierId, String vehiclePlateNumber, String driverName, String driverPhone, Integer dockId) {
+    public TransportLoad createLoad(Integer carrierId, String trailerNumber, String driverName, String driverPhone) {
         Carrier carrier = carrierRepository.findById(carrierId)
                 .orElseThrow(() -> new RuntimeException("Carrier not found"));
 
         TransportLoad load = new TransportLoad();
+        load.setLoadNumber("LOAD-" + System.currentTimeMillis());
         load.setCarrier(carrier);
-        load.setVehiclePlateNumber(vehiclePlateNumber);
+        load.setTrailerNumber(trailerNumber);
         load.setDriverName(driverName);
         load.setDriverPhone(driverPhone);
-        load.setDockId(dockId);
-        load.setStatus(LoadStatus.PLANNED);
+        load.setStatus(LoadStatus.PLANNING);
+        load.setCreatedAt(LocalDateTime.now());
         
         return transportLoadRepository.save(load);
     }
@@ -49,7 +50,7 @@ public class ShippingService {
         TransportLoad load = transportLoadRepository.findById(loadId)
                 .orElseThrow(() -> new RuntimeException("Load not found"));
 
-        if (load.getStatus() == LoadStatus.DISPATCHED || load.getStatus() == LoadStatus.DELIVERED) {
+        if (load.getStatus() == LoadStatus.IN_TRANSIT || load.getStatus() == LoadStatus.DELIVERED) {
             throw new RuntimeException("Cannot assign shipment to a dispatched or delivered load");
         }
 
@@ -59,7 +60,7 @@ public class ShippingService {
         shipment.setTransportLoad(load);
         shipmentRepository.save(shipment);
 
-        if (load.getStatus() == LoadStatus.PLANNED) {
+        if (load.getStatus() == LoadStatus.PLANNING) {
             load.setStatus(LoadStatus.LOADING);
             transportLoadRepository.save(load);
         }
@@ -70,7 +71,7 @@ public class ShippingService {
         TransportLoad load = transportLoadRepository.findById(loadId)
                 .orElseThrow(() -> new RuntimeException("Load not found"));
 
-        if (load.getStatus() == LoadStatus.DISPATCHED) {
+        if (load.getStatus() == LoadStatus.IN_TRANSIT) {
             throw new RuntimeException("Load is already dispatched");
         }
 
@@ -79,15 +80,9 @@ public class ShippingService {
             throw new RuntimeException("Cannot dispatch an empty load");
         }
 
-        double totalWeight = 0.0;
-        int totalParcels = 0;
-
         for (Shipment shipment : shipments) {
             shipment.setStatus(ShipmentStatus.SHIPPED);
             shipment.setShippedAt(LocalDateTime.now()); 
-            
-            totalWeight += (shipment.getTotalWeightKg() != null ? shipment.getTotalWeightKg() : 0.0);
-            totalParcels += (shipment.getParcels() != null ? shipment.getParcels().size() : 0);
             
             // Update Order Status
             OutboundOrder order = shipment.getOutboundOrder();
@@ -99,18 +94,70 @@ public class ShippingService {
             shipmentRepository.save(shipment);
         }
 
-        load.setStatus(LoadStatus.DISPATCHED);
-        load.setDepartureTime(LocalDateTime.now());
+        load.setStatus(LoadStatus.IN_TRANSIT);
+        load.setActualDeparture(LocalDateTime.now());
         transportLoadRepository.save(load);
 
         Manifest manifest = new Manifest();
+        manifest.setManifestNumber("MAN-" + System.currentTimeMillis());
         manifest.setTransportLoad(load);
-        manifest.setTotalParcels(totalParcels);
-        manifest.setTotalWeight(totalWeight);
-        manifest.setGenerationDate(LocalDateTime.now());
-        manifest.setCarrierManifestId(UUID.randomUUID().toString()); // Mock generation
+        manifest.setCreatedAt(LocalDateTime.now());
 
         return manifestRepository.save(manifest);
+    }
+
+    // ===== CARRIER OPERATIONS =====
+    
+    public List<Carrier> getAllCarriers() {
+        return carrierRepository.findAll();
+    }
+
+    public java.util.Optional<Carrier> getCarrierById(Integer id) {
+        return carrierRepository.findById(id);
+    }
+
+    // ===== SHIPMENT OPERATIONS =====
+    
+    public List<Shipment> getAllShipments() {
+        return shipmentRepository.findAll();
+    }
+
+    public java.util.Optional<Shipment> getShipmentById(Integer id) {
+        return shipmentRepository.findById(id);
+    }
+
+    @Transactional
+    public Shipment createShipment(Integer outboundOrderId, Integer carrierId, String trackingNumber) {
+        OutboundOrder order = outboundOrderRepository.findById(outboundOrderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + outboundOrderId));
+
+        Shipment shipment = new Shipment();
+        shipment.setOutboundOrder(order);
+        shipment.setCarrierId(carrierId);
+        shipment.setTrackingNumber(trackingNumber != null ? trackingNumber : generateTrackingNumber());
+        shipment.setStatus(ShipmentStatus.PACKING);
+        
+        return shipmentRepository.save(shipment);
+    }
+
+    @Transactional
+    public java.util.Optional<Shipment> updateShipment(Integer id, Shipment updated) {
+        return shipmentRepository.findById(id)
+                .map(existing -> {
+                    if (updated.getCarrierId() != null) existing.setCarrierId(updated.getCarrierId());
+                    if (updated.getTrackingNumber() != null) existing.setTrackingNumber(updated.getTrackingNumber());
+                    if (updated.getStatus() != null) existing.setStatus(updated.getStatus());
+                    if (updated.getTotalWeightKg() != null) existing.setTotalWeightKg(updated.getTotalWeightKg());
+                    return shipmentRepository.save(existing);
+                });
+    }
+
+    public List<TransportLoad> getAllLoads() {
+        return transportLoadRepository.findAll();
+    }
+
+    private String generateTrackingNumber() {
+        return "TRK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
     /**

@@ -2,6 +2,8 @@ package com.mycompany.sapo_leyendo.model;
 
 public enum PickListStatus {
     PENDING,
-    STARTED,
-    COMPLETED
+    ASSIGNED,
+    IN_PROGRESS,
+    COMPLETED,
+    CANCELLED
 }

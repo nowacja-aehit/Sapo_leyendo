@@ -7,10 +7,12 @@
             "request": "launch",
             "mainClass": "com.mycompany.sapo_leyendo.SapoApplication",
             "projectName": "sapo_leyendo",
-            "args": "",
+            "cwd": "${workspaceFolder}",
             "env": {
-                "SPRING_PROFILES_ACTIVE": "default"
-            }
+                "SPRING_PROFILES_ACTIVE": "sqlite",
+                "APP_HTTP_LOGGING_ENABLED": "true"
+            },
+            "vmArgs": "-Duser.dir=${workspaceFolder}"
         },
         {
             "type": "node",
@@ -39,7 +41,13 @@
     "compounds": [
         {
             "name": "Full Stack Debug",
-            "configurations": ["Debug Backend (Spring Boot)", "Debug Frontend (npm run dev)", "Debug Frontend (Chrome)"]
+            "configurations": ["Debug Backend (Spring Boot)", "Debug Frontend (npm run dev)", "Debug Frontend (Chrome)"],
+            "stopAll": true
+        },
+        {
+            "name": "Backend + Frontend",
+            "configurations": ["Debug Backend (Spring Boot)", "Debug Frontend (npm run dev)"],
+            "stopAll": true
         }
     ]
 }

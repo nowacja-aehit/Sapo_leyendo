@@ -54,13 +54,17 @@ public class PackingService {
         Shipment shipment = shipmentRepository.findById(shipmentId)
                 .orElseThrow(() -> new RuntimeException("Shipment not found"));
 
-        PackingMaterial material = packingMaterialRepository.findById(packingMaterialId)
-                .orElseThrow(() -> new RuntimeException("Packing Material not found"));
-
         Parcel parcel = new Parcel();
         parcel.setShipment(shipment);
-        parcel.setPackingMaterial(material);
-        parcel.setWeightKg(material.getTareWeightKg()); // Initial weight is tare weight
+        
+        if (packingMaterialId != null) {
+            PackingMaterial material = packingMaterialRepository.findById(packingMaterialId)
+                    .orElseThrow(() -> new RuntimeException("Packing Material not found"));
+            parcel.setPackingMaterial(material);
+            parcel.setWeightKg(material.getTareWeightKg()); // Initial weight is tare weight
+        } else {
+            parcel.setWeightKg(0.0);
+        }
         
         return parcelRepository.save(parcel);
     }
@@ -73,10 +77,14 @@ public class PackingService {
         Shipment shipment = parcel.getShipment();
         List<Parcel> parcels = shipment.getParcels();
         List<ParcelItem> parcelItems = new ArrayList<>();
-        for (Parcel p : parcels) {
-            parcelItems.addAll(p.getItems());
+        if (parcels != null) {
+            for (Parcel p : parcels) {
+                if (p.getItems() != null) {
+                    parcelItems.addAll(p.getItems());
+                }
+            }
         }
-        if (parcelItems.stream().anyMatch(item -> item.getProduct().getId().equals(productId))) {
+        if (parcelItems.stream().anyMatch(item -> item.getProduct() != null && item.getProduct().getId().equals(productId))) {
             throw new IllegalStateException("Product already packed in another parcel.");
         }
 
@@ -93,9 +101,10 @@ public class PackingService {
         // Update parcel weight (simplified logic)
         if (product.getWeightKg() != null) {
             double itemWeight = product.getWeightKg() * quantity;
-            double newWeight = parcel.getWeightKg() + itemWeight;
-            parcel.setWeightKg(newWeight);
-            shipment.setTotalWeightKg(shipment.getTotalWeightKg() + itemWeight);
+            double currentParcelWeight = parcel.getWeightKg() != null ? parcel.getWeightKg() : 0.0;
+            double currentShipmentWeight = shipment.getTotalWeightKg() != null ? shipment.getTotalWeightKg() : 0.0;
+            parcel.setWeightKg(currentParcelWeight + itemWeight);
+            shipment.setTotalWeightKg(currentShipmentWeight + itemWeight);
             parcelRepository.save(parcel);
             shipmentRepository.save(shipment);
         }
@@ -110,16 +119,21 @@ public class PackingService {
         
         shipment.setStatus(ShipmentStatus.PACKED);
         
-        // Calculate total weight
-        double totalWeight = shipment.getParcels().stream()
-                .mapToDouble(Parcel::getWeightKg)
-                .sum();
+        // Calculate total weight with null safety
+        double totalWeight = 0.0;
+        if (shipment.getParcels() != null) {
+            totalWeight = shipment.getParcels().stream()
+                    .mapToDouble(p -> p.getWeightKg() != null ? p.getWeightKg() : 0.0)
+                    .sum();
+        }
         shipment.setTotalWeightKg(totalWeight);
         
         // Update Outbound Order status
         OutboundOrder order = shipment.getOutboundOrder();
-        order.setStatus("PACKED");
-        outboundOrderRepository.save(order);
+        if (order != null) {
+            order.setStatus("PACKED");
+            outboundOrderRepository.save(order);
+        }
         
         return shipmentRepository.save(shipment);
     }

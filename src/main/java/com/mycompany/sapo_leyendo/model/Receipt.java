@@ -1,6 +1,7 @@
 package com.mycompany.sapo_leyendo.model;
 
 import jakarta.persistence.*;
+import com.mycompany.sapo_leyendo.converter.LocalDateTimeStringConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,7 @@ public class Receipt {
     @Column(name = "operator_id")
     private Long operatorId;
 
+    @Convert(converter = LocalDateTimeStringConverter.class)
     @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp;
 

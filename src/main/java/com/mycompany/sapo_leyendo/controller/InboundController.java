@@ -2,7 +2,9 @@ package com.mycompany.sapo_leyendo.controller;
 
 import com.mycompany.sapo_leyendo.dto.ReceiveItemRequest;
 import com.mycompany.sapo_leyendo.model.InboundOrder;
+import com.mycompany.sapo_leyendo.model.Product;
 import com.mycompany.sapo_leyendo.model.Receipt;
+import com.mycompany.sapo_leyendo.repository.ProductRepository;
 import com.mycompany.sapo_leyendo.service.InboundService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,11 +14,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/inbound")
-@CrossOrigin(origins = "http://localhost:5173")
 public class InboundController {
 
     @Autowired
     private InboundService inboundService;
+
+    @Autowired
+    private ProductRepository productRepository;
 
     @GetMapping
     public List<InboundOrder> getAllInboundOrders() {
@@ -31,23 +35,54 @@ public class InboundController {
     }
 
     @PostMapping
-    public InboundOrder createInboundOrder(@RequestBody InboundOrder order) {
-        if (order.getItems() != null) {
-            order.getItems().forEach(item -> item.setInboundOrder(order));
+    public ResponseEntity<?> createInboundOrder(@RequestBody InboundOrder order) {
+        if (order.getStatus() == null || order.getStatus().isBlank()) {
+            order.setStatus("PLANNED");
         }
-        return inboundService.saveInboundOrder(order);
+        if (order.getItems() != null) {
+            for (var item : order.getItems()) {
+                item.setInboundOrder(order);
+                // Resolve Product from productId
+                if (item.getProduct() == null && item.getProductId() != null) {
+                    Product product = productRepository.findById(item.getProductId())
+                            .orElse(null);
+                    if (product == null) {
+                        return ResponseEntity.badRequest()
+                                .body("Product not found with id: " + item.getProductId());
+                    }
+                    item.setProduct(product);
+                }
+                // Set default quantity field name mapping
+                if (item.getQuantityExpected() == null) {
+                    item.setQuantityExpected(0);
+                }
+            }
+        }
+        return ResponseEntity.ok(inboundService.saveInboundOrder(order));
     }
 
     @PostMapping("/receive")
-    public ResponseEntity<Receipt> receiveItem(@RequestBody ReceiveItemRequest request) {
-        Receipt receipt = inboundService.receiveItem(
-                request.getInboundOrderItemId(),
-                request.getLpn(),
-                request.getQuantity(),
-                request.getOperatorId(),
-                request.getDamageCode()
-        );
-        return ResponseEntity.ok(receipt);
+    public ResponseEntity<?> receiveItem(@RequestBody ReceiveItemRequest request) {
+        // Validate required fields
+        if (request.getInboundOrderItemId() == null) {
+            return ResponseEntity.badRequest().body("inboundOrderItemId is required");
+        }
+        if (request.getQuantity() == null || request.getQuantity() <= 0) {
+            return ResponseEntity.badRequest().body("quantity must be a positive number");
+        }
+        
+        try {
+            Receipt receipt = inboundService.receiveItem(
+                    request.getInboundOrderItemId(),
+                    request.getLpn() != null ? request.getLpn() : inboundService.generateLpn(),
+                    request.getQuantity(),
+                    request.getOperatorId(),
+                    request.getDamageCode()
+            );
+            return ResponseEntity.ok(receipt);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/appointments")

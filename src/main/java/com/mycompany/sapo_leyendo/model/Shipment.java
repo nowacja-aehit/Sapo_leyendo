@@ -1,5 +1,7 @@
 package com.mycompany.sapo_leyendo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.mycompany.sapo_leyendo.converter.LocalDateTimeStringConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,12 +29,14 @@ public class Shipment {
     @Column(name = "tracking_number")
     private String trackingNumber;
 
+    @Convert(converter = LocalDateTimeStringConverter.class)
     @Column(name = "shipped_at")
     private java.time.LocalDateTime shippedAt;
 
-     @ManyToOne
-     @JoinColumn(name = "id_load")
-     private TransportLoad transportLoad;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_load")
+    @JsonIgnore
+    private TransportLoad transportLoad;
 
     @Enumerated(EnumType.STRING)
     private ShipmentStatus status;

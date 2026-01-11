@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, Plus, ArrowDownToLine, CheckCircle, Calendar, Truck } from "lucide-react";
+import { Search, Filter, Plus, ArrowDownToLine, CheckCircle, Calendar, Truck, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Card } from "../ui/card";
@@ -12,8 +12,23 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Label } from "../ui/label";
 import { fetchInboundOrders, receiveItem, generateLpn, InboundOrder, InboundOrderItem, createInboundOrder } from "../../services/inboundService";
+import { fetchProducts, Product } from "../../services/productService";
+
+interface NewItemDraft {
+  productId: number;
+  productName: string;
+  sku: string;
+  expectedQuantity: number;
+}
 
 export function InboundView() {
   const [orders, setOrders] = useState<InboundOrder[]>([]);
@@ -24,12 +39,15 @@ export function InboundView() {
   const [lpn, setLpn] = useState<string>("");
   const [isReceiving, setIsReceiving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [itemQuantity, setItemQuantity] = useState<number>(1);
   const [newOrder, setNewOrder] = useState({
     orderReference: "",
     supplier: "",
     expectedArrival: new Date().toISOString().split("T")[0],
   });
-  const [newItems, setNewItems] = useState<Array<{ productName: string; sku: string; expectedQuantity: number }>>([]);
+  const [newItems, setNewItems] = useState<NewItemDraft[]>([]);
 
   useEffect(() => {
     loadData();
@@ -37,11 +55,35 @@ export function InboundView() {
 
   const loadData = async () => {
     try {
-      const data = await fetchInboundOrders();
-      setOrders(data);
+      const [orderData, productData] = await Promise.all([
+        fetchInboundOrders(),
+        fetchProducts()
+      ]);
+      setOrders(orderData);
+      setProducts(productData);
     } catch (error) {
-      console.error("Failed to fetch inbound orders", error);
+      console.error("Failed to fetch data", error);
     }
+  };
+
+  const handleAddItemToList = () => {
+    if (!selectedProductId) return;
+    const product = products.find(p => p.id === Number(selectedProductId));
+    if (!product) return;
+    
+    setNewItems(prev => [...prev, {
+      productId: product.id,
+      productName: product.name,
+      sku: product.sku,
+      expectedQuantity: itemQuantity,
+    }]);
+    
+    setSelectedProductId("");
+    setItemQuantity(1);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setNewItems(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleReceiveClick = async (item: InboundOrderItem) => {
@@ -94,13 +136,7 @@ export function InboundView() {
         })),
       });
       setOrders((prev) => [...prev, created]);
-      setIsCreating(false);
-      setNewOrder({
-        orderReference: "",
-        supplier: "",
-        expectedArrival: new Date().toISOString().split("T")[0],
-      });
-      setNewItems([]);
+      resetForm();
     } catch (error) {
       console.error("Failed to create inbound order", error);
       // Optimistic UI so user sees the record even when API is blocked
@@ -119,8 +155,20 @@ export function InboundView() {
         })),
       } as InboundOrder;
       setOrders((prev) => [...prev, fallback]);
-      setIsCreating(false);
+      resetForm();
     }
+  };
+
+  const resetForm = () => {
+    setIsCreating(false);
+    setNewOrder({
+      orderReference: "",
+      supplier: "",
+      expectedArrival: new Date().toISOString().split("T")[0],
+    });
+    setNewItems([]);
+    setSelectedProductId("");
+    setItemQuantity(1);
   };
 
   return (
@@ -254,10 +302,10 @@ export function InboundView() {
       </Dialog>
 
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nowa awizacja</DialogTitle>
-            <DialogDescription>Utwórz nowe przyjęcie dostawy</DialogDescription>
+            <DialogDescription>Utwórz nowe przyjęcie dostawy i dodaj produkty</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -293,51 +341,77 @@ export function InboundView() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Pozycje</Label>
-                <Button variant="outline" size="sm" onClick={() => setNewItems([...newItems, { productName: "", sku: "", expectedQuantity: 1 }])}>Dodaj pozycję</Button>
+            {/* Products Section with Dropdown */}
+            <div className="border-t pt-4">
+              <Label className="mb-2 block">Pozycje do przyjęcia</Label>
+              
+              {/* Add Product Form */}
+              <div className="flex gap-2 mb-3">
+                <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Wybierz produkt..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((product) => (
+                      <SelectItem key={product.id} value={String(product.id)}>
+                        {product.name} ({product.sku})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  min="1"
+                  className="w-24"
+                  placeholder="Ilość"
+                  value={itemQuantity}
+                  onChange={(e) => setItemQuantity(parseInt(e.target.value) || 1)}
+                />
+                <Button type="button" variant="outline" onClick={handleAddItemToList}>
+                  <Plus size={16} />
+                </Button>
               </div>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {newItems.length === 0 && <p className="text-sm text-gray-500">Brak pozycji. Dodaj co najmniej jedną.</p>}
-                {newItems.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-3 gap-2">
-                    <Input
-                      placeholder="Nazwa"
-                      value={item.productName}
-                      onChange={(e) => {
-                        const copy = [...newItems];
-                        copy[idx].productName = e.target.value;
-                        setNewItems(copy);
-                      }}
-                    />
-                    <Input
-                      placeholder="SKU"
-                      value={item.sku}
-                      onChange={(e) => {
-                        const copy = [...newItems];
-                        copy[idx].sku = e.target.value;
-                        setNewItems(copy);
-                      }}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Ilość"
-                      value={item.expectedQuantity}
-                      onChange={(e) => {
-                        const copy = [...newItems];
-                        copy[idx].expectedQuantity = Number(e.target.value);
-                        setNewItems(copy);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+
+              {/* Items List */}
+              {newItems.length > 0 && (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Produkt</th>
+                        <th className="px-3 py-2 text-left">SKU</th>
+                        <th className="px-3 py-2 text-right">Oczekiwana ilość</th>
+                        <th className="px-3 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {newItems.map((item, idx) => (
+                        <tr key={idx}>
+                          <td className="px-3 py-2">{item.productName}</td>
+                          <td className="px-3 py-2 text-gray-500">{item.sku}</td>
+                          <td className="px-3 py-2 text-right">{item.expectedQuantity}</td>
+                          <td className="px-3 py-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleRemoveItem(idx)}>
+                              <Trash2 size={14} className="text-red-500" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {newItems.length === 0 && (
+                <div className="text-center py-4 text-gray-500 border border-dashed rounded-lg">
+                  Dodaj produkty do awizacji
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreating(false)}>Anuluj</Button>
-            <Button onClick={handleCreateOrder}>Zapisz</Button>
+            <Button variant="outline" onClick={resetForm}>Anuluj</Button>
+            <Button onClick={handleCreateOrder} disabled={newItems.length === 0}>Zapisz awizację</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

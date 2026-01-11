@@ -38,7 +38,7 @@ class ShippingServiceTest {
     private OutboundOrderRepository outboundOrderRepository;
 
     @Test
-    void shouldCreateLoadWithPlannedStatus() {
+    void shouldCreateLoadWithPlanningStatus() {
         Carrier carrier = new Carrier();
         carrier.setId(10);
         when(carrierRepository.findById(10)).thenReturn(Optional.of(carrier));
@@ -48,9 +48,9 @@ class ShippingServiceTest {
             return load;
         });
 
-        TransportLoad load = shippingService.createLoad(10, "DW12345", "Jan", "111222333", 1);
+        TransportLoad load = shippingService.createLoad(10, "DW12345", "Jan", "111222333");
 
-        assertThat(load.getStatus()).isEqualTo(LoadStatus.PLANNED);
+        assertThat(load.getStatus()).isEqualTo(LoadStatus.PLANNING);
         assertThat(load.getCarrier()).isEqualTo(carrier);
         assertThat(load.getId()).isEqualTo(99);
     }
@@ -59,7 +59,7 @@ class ShippingServiceTest {
     void shouldAssignShipmentToLoadAndUpdateStatus() {
         TransportLoad load = new TransportLoad();
         load.setId(1);
-        load.setStatus(LoadStatus.PLANNED);
+        load.setStatus(LoadStatus.PLANNING);
 
         Shipment shipment = new Shipment();
         shipment.setId(2);
@@ -102,19 +102,19 @@ class ShippingServiceTest {
 
         Manifest manifest = shippingService.dispatchLoad(1);
 
-        assertThat(load.getStatus()).isEqualTo(LoadStatus.DISPATCHED);
+        assertThat(load.getStatus()).isEqualTo(LoadStatus.IN_TRANSIT);
         assertThat(manifest.getId()).isEqualTo(5);
-        assertThat(manifest.getTotalParcels()).isEqualTo(0);
+        assertThat(manifest.getManifestNumber()).isNotNull();
         assertThat(shipment.getStatus()).isEqualTo(ShipmentStatus.SHIPPED);
         assertThat(shipment.getShippedAt()).isNotNull();
         verify(outboundOrderRepository).save(order);
     }
 
     @Test
-    void shouldFailAssigningToDispatchedLoad() {
+    void shouldFailAssigningToInTransitLoad() {
         TransportLoad load = new TransportLoad();
         load.setId(1);
-        load.setStatus(LoadStatus.DISPATCHED);
+        load.setStatus(LoadStatus.IN_TRANSIT);
         when(transportLoadRepository.findById(1)).thenReturn(Optional.of(load));
 
         assertThrows(RuntimeException.class, () -> shippingService.assignShipmentToLoad(1, 2));

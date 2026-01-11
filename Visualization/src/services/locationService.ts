@@ -59,7 +59,15 @@ export const getAllLocations = async (): Promise<Location[]> => {
 
 export const createLocation = async (location: Partial<Location>): Promise<Location> => {
     try {
-        const response = await axios.post(API_URL, location);
+        // Map to LocationCreateRequest format expected by backend
+        const payload = {
+            name: location.name,
+            zone: location.zone?.name, // Backend expects zone name as string
+            locationTypeId: location.locationType?.id, // Backend expects locationTypeId
+            isActive: location.status === 'ACTIVE',
+            barcode: location.barcode,
+        };
+        const response = await axios.post(API_URL, payload);
         return response.data;
     } catch (error) {
         console.error("Failed to create location, using local state only", error);

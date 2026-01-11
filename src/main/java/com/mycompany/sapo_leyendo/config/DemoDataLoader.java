@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -152,14 +152,14 @@ public class DemoDataLoader implements CommandLineRunner {
         createInventory(tv, locA0201, uomSzt, 5);
 
         // 11. Inbound Orders
-        createInboundOrder("INB-2025-001", "PLANNED", "Acme Corp", LocalDate.of(2025, 12, 25));
-        createInboundOrder("INB-2025-002", "RECEIVED", "Global Supplies", LocalDate.of(2025, 12, 20));
-        createInboundOrder("INB-2025-003", "IN_TRANSIT", "Tech Parts Ltd", LocalDate.of(2025, 12, 18));
+        createInboundOrder("INB-2025-001", "PLANNED", "Acme Corp", LocalDateTime.of(2025, 12, 25, 10, 0));
+        createInboundOrder("INB-2025-002", "RECEIVED", "Global Supplies", LocalDateTime.of(2025, 12, 20, 14, 30));
+        createInboundOrder("INB-2025-003", "IN_TRANSIT", "Tech Parts Ltd", LocalDateTime.of(2025, 12, 18, 9, 0));
 
         // 12. Outbound Orders
-        createOutboundOrder("ORD-2025-001", "NEW", "Warsaw, Poland", LocalDate.of(2025, 12, 20));
-        createOutboundOrder("ORD-2025-002", "PICKING", "Berlin, Germany", LocalDate.of(2025, 12, 21));
-        createOutboundOrder("ORD-2025-003", "SHIPPED", "Paris, France", LocalDate.of(2025, 12, 10));
+        createOutboundOrder("ORD-2025-001", "NEW", "Warsaw, Poland", LocalDateTime.of(2025, 12, 20, 12, 0));
+        createOutboundOrder("ORD-2025-002", "PICKING", "Berlin, Germany", LocalDateTime.of(2025, 12, 21, 15, 0));
+        createOutboundOrder("ORD-2025-003", "SHIPPED", "Paris, France", LocalDateTime.of(2025, 12, 10, 8, 0));
 
         log.info("✅ Dane demonstracyjne załadowane pomyślnie!");
         log.info("   📊 {} ról, {} użytkowników, {} produktów, {} lokalizacji",
@@ -263,7 +263,7 @@ public class DemoDataLoader implements CommandLineRunner {
         return inventoryRepository.save(inv);
     }
 
-    private InboundOrder createInboundOrder(String refNumber, String status, String supplier, LocalDate expectedDate) {
+    private InboundOrder createInboundOrder(String refNumber, String status, String supplier, LocalDateTime expectedDate) {
         InboundOrder order = new InboundOrder();
         order.setReferenceNumber(refNumber);
         order.setStatus(status);
@@ -272,7 +272,7 @@ public class DemoDataLoader implements CommandLineRunner {
         return inboundOrderRepository.save(order);
     }
 
-    private OutboundOrder createOutboundOrder(String refNumber, String status, String destination, LocalDate shipDate) {
+    private OutboundOrder createOutboundOrder(String refNumber, String status, String destination, LocalDateTime shipDate) {
         OutboundOrder order = new OutboundOrder();
         order.setReferenceNumber(refNumber);
         order.setStatus(status);

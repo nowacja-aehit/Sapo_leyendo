@@ -70,7 +70,8 @@ public class InboundControllerTest {
         Map<String, Object> orderPayload = new HashMap<>();
         orderPayload.put("orderReference", "INB-INT-001");
         orderPayload.put("status", "PLANNED");
-        orderPayload.put("expectedArrival", LocalDate.now().plusDays(1).toString());
+        // Use LocalDateTime format for expectedArrival
+        orderPayload.put("expectedArrival", LocalDate.now().plusDays(1).atStartOfDay().toString());
         orderPayload.put("supplier", "Supplier X");
         orderPayload.put("dockId", dock.getId());
 

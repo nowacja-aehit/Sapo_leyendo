@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OutboundOrderRepository extends JpaRepository<OutboundOrder, Integer> {
+    boolean existsByReferenceNumber(String referenceNumber);
 }

@@ -8,13 +8,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/returns")
-@CrossOrigin(origins = "http://localhost:5173")
 public class ReturnsController {
 
     @Autowired
     private ReturnsService returnsService;
+
+    @GetMapping
+    public List<RmaRequest> getAllRmaRequests() {
+        return returnsService.getAllRmaRequests();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RmaRequest> getRmaRequestById(@PathVariable Integer id) {
+        return returnsService.getRmaRequestById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @PostMapping("/rma")
     public ResponseEntity<RmaRequest> createRmaRequest(@RequestParam Integer outboundOrderId, @RequestParam String reason) {
@@ -33,5 +46,15 @@ public class ReturnsController {
             @RequestParam GradingStatus grade,
             @RequestParam(required = false) String comment) {
         return ResponseEntity.ok(returnsService.gradeItem(rmaId, productId, grade, comment));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRmaRequest(@PathVariable Integer id) {
+        return returnsService.getRmaRequestById(id)
+                .map(rma -> {
+                    returnsService.deleteRmaRequest(id);
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

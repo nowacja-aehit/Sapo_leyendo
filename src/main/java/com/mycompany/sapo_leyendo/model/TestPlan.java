@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "TestPlans")
@@ -21,10 +21,15 @@ public class TestPlan {
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "aql_level")
-    private Double aqlLevel;
+    @Column(name = "description")
+    private String description;
 
-    @ElementCollection
-    @CollectionTable(name = "TestPlanSteps", joinColumns = @JoinColumn(name = "id_test_plan"))
-    private List<TestStep> steps;
+    @Column(name = "test_steps")
+    private String testSteps;
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 }

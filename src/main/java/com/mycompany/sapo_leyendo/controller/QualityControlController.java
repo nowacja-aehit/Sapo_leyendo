@@ -1,6 +1,7 @@
 package com.mycompany.sapo_leyendo.controller;
 
 import com.mycompany.sapo_leyendo.model.*;
+import com.mycompany.sapo_leyendo.repository.QcInspectionRepository;
 import com.mycompany.sapo_leyendo.service.QualityControlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,11 +11,21 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/qc")
-@CrossOrigin(origins = "http://localhost:5173")
 public class QualityControlController {
 
     @Autowired
     private QualityControlService qcService;
+
+    @Autowired
+    private QcInspectionRepository qcInspectionRepository;
+
+    /**
+     * Get all QC inspections - for dashboard/list view
+     */
+    @GetMapping("/inspections")
+    public ResponseEntity<List<QcInspection>> getAllInspections() {
+        return ResponseEntity.ok(qcInspectionRepository.findAll());
+    }
 
     @PostMapping("/inspections")
     public ResponseEntity<QcInspection> createInspection(
@@ -36,14 +47,22 @@ public class QualityControlController {
     @PostMapping("/inspections/{inspectionId}/ncr")
     public ResponseEntity<NonConformanceReport> createNcr(
             @PathVariable Integer inspectionId,
-            @RequestParam DefectType defectType,
+            @RequestParam String defectType,
             @RequestParam String description,
             @RequestBody(required = false) List<String> photos) {
-        return ResponseEntity.ok(qcService.createNcr(inspectionId, defectType, description, photos));
+        // Parse defectType string to enum
+        DefectType type;
+        try {
+            type = DefectType.valueOf(defectType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // If parsing fails, default to OTHER
+            type = DefectType.OTHER;
+        }
+        return ResponseEntity.ok(qcService.createNcr(inspectionId, type, description, photos));
     }
     
     @PostMapping("/test-plans")
     public ResponseEntity<TestPlan> createTestPlan(@RequestBody TestPlan testPlan) {
-        return ResponseEntity.ok(qcService.createTestPlan(testPlan.getName(), testPlan.getAqlLevel(), testPlan.getSteps()));
+        return ResponseEntity.ok(qcService.createTestPlan(testPlan.getName(), testPlan.getDescription(), testPlan.getTestSteps()));
     }
 }

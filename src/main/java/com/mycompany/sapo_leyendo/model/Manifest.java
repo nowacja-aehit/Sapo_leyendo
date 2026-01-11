@@ -18,19 +18,13 @@ public class Manifest {
     @Column(name = "id_manifest")
     private Integer id;
 
-    @OneToOne
-    @JoinColumn(name = "id_load", nullable = false)
+    @Column(name = "manifest_number", unique = true, nullable = false)
+    private String manifestNumber;
+
+    @ManyToOne
+    @JoinColumn(name = "id_load")
     private TransportLoad transportLoad;
 
-    @Column(name = "carrier_manifest_id")
-    private String carrierManifestId;
-
-    @Column(name = "total_parcels")
-    private Integer totalParcels;
-
-    @Column(name = "total_weight")
-    private Double totalWeight;
-
-    @Column(name = "generation_date")
-    private LocalDateTime generationDate;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 }

@@ -1,5 +1,6 @@
 package com.mycompany.sapo_leyendo.service;
 
+import com.mycompany.sapo_leyendo.dto.LocationCreateRequest;
 import com.mycompany.sapo_leyendo.model.Location;
 import com.mycompany.sapo_leyendo.model.LocationType;
 import com.mycompany.sapo_leyendo.model.Zone;
@@ -32,6 +33,10 @@ public class LocationService {
         return locationRepository.findById(id);
     }
 
+    public Optional<Location> getLocationByName(String name) {
+        return locationRepository.findByName(name);
+    }
+
     public Location saveLocation(Location location) {
         return locationRepository.save(location);
     }
@@ -47,6 +52,38 @@ public class LocationService {
 
     public Zone saveZone(Zone zone) {
         return zoneRepository.save(zone);
+    }
+
+    public Location createLocationFromRequest(LocationCreateRequest request) {
+        Location location = new Location();
+        location.setName(request.getName());
+        location.setAisle(request.getAisle());
+        location.setRack(request.getRack());
+        location.setLevel(request.getLevel());
+        location.setBin(request.getBin());
+        location.setActive(request.getIsActive() != null ? request.getIsActive() : true);
+        
+        // Znajdź lub utwórz strefę
+        if (request.getZone() != null) {
+            Zone zone = zoneRepository.findByName(request.getZone())
+                    .orElseGet(() -> {
+                        Zone newZone = new Zone();
+                        newZone.setName(request.getZone());
+                        newZone.setTemperatureControlled(false);
+                        newZone.setSecure(false);
+                        newZone.setAllowMixedSku(true);
+                        return zoneRepository.save(newZone);
+                    });
+            location.setZone(zone);
+        }
+        
+        // Znajdź typ lokacji
+        if (request.getLocationTypeId() != null) {
+            locationTypeRepository.findById(request.getLocationTypeId())
+                    .ifPresent(location::setLocationType);
+        }
+        
+        return locationRepository.save(location);
     }
 
     // LocationType methods

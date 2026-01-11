@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class PickingService {
@@ -53,8 +52,8 @@ public class PickingService {
     public Wave createWave(List<Integer> outboundOrderIds) {
         Wave wave = new Wave();
         wave.setName("Wave-" + System.currentTimeMillis());
-        wave.setCreatedDate(LocalDateTime.now());
-        wave.setStatus(WaveStatus.PLANNED);
+        wave.setCreatedAt(LocalDateTime.now());
+        wave.setStatus(WaveStatus.CREATED);
         
         // In a real system, we would link orders to the wave here.
         // For now, we assume the caller will handle the linkage or we add a waveId to OutboundOrder.
@@ -67,13 +66,13 @@ public class PickingService {
     }
 
     @Transactional
-    public Wave runWave(UUID waveId, List<Integer> outboundOrderIds) {
+    public Wave runWave(Integer waveId, List<Integer> outboundOrderIds) {
         allocateWave(waveId, outboundOrderIds);
         releaseWave(waveId, outboundOrderIds);
         return waveRepository.findById(waveId).orElseThrow();
     }
 
-    public List<PickingTask> getPickingTasks(UUID waveId) {
+    public List<PickingTask> getPickingTasks(Integer waveId) {
         // This assumes we can find tasks by wave.
         // PickTask -> PickList -> Wave
         // We need a custom query or filter.
@@ -89,12 +88,12 @@ public class PickingService {
      * This is a simplified version of Hard Allocation.
      */
     @Transactional
-    public void allocateWave(UUID waveId, List<Integer> outboundOrderIds) {
+    public void allocateWave(Integer waveId, List<Integer> outboundOrderIds) {
         Wave wave = waveRepository.findById(waveId)
                 .orElseThrow(() -> new RuntimeException("Wave not found"));
 
-        if (wave.getStatus() != WaveStatus.PLANNED) {
-            throw new RuntimeException("Wave must be in PLANNED status to allocate");
+        if (wave.getStatus() != WaveStatus.CREATED) {
+            throw new RuntimeException("Wave must be in CREATED status to allocate");
         }
 
         for (Integer orderId : outboundOrderIds) {
@@ -106,12 +105,13 @@ public class PickingService {
             }
         }
 
-        wave.setStatus(WaveStatus.ALLOCATED);
+        wave.setStatus(WaveStatus.RELEASED);
+        wave.setReleasedAt(LocalDateTime.now());
         waveRepository.save(wave);
     }
 
     private void allocateItem(OutboundOrderItem item, OutboundOrder order, Wave wave) {
-        int qtyNeeded = item.getQuantityOrdered();
+        double qtyNeeded = item.getQuantityOrdered() != null ? item.getQuantityOrdered() : 0.0;
         Product product = item.getProduct();
 
         // Find available inventory
@@ -124,7 +124,8 @@ public class PickingService {
         for (Inventory inv : availableInventory) {
             if (qtyNeeded <= 0) break;
 
-            int qtyToTake = Math.min(qtyNeeded, inv.getQuantity());
+            // Convert to int since Inventory.quantity is Integer
+            int qtyToTake = (int) Math.min(qtyNeeded, inv.getQuantity().doubleValue());
 
             // Logic to split inventory for allocation
             if (inv.getQuantity() > qtyToTake) {
@@ -138,7 +139,9 @@ public class PickingService {
                 allocatedInv.setQuantity(qtyToTake);
                 allocatedInv.setLpn(inv.getLpn());
                 allocatedInv.setBatchNumber(inv.getBatchNumber());
-                allocatedInv.setStatus(InventoryStatus.ALLOCATED); // We need to ensure this status exists
+                allocatedInv.setStatus(InventoryStatus.ALLOCATED);
+                allocatedInv.setUom(inv.getUom()); // Copy UOM from source inventory
+                allocatedInv.setReceivedAt(inv.getReceivedAt() != null ? inv.getReceivedAt() : LocalDateTime.now()); // Copy receivedAt or set current time
                 inventoryRepository.save(allocatedInv);
             } else {
                 // Take whole record
@@ -160,12 +163,12 @@ public class PickingService {
      * 3. Release Wave: Generate Pick Lists and Tasks
      */
     @Transactional
-    public void releaseWave(UUID waveId, List<Integer> outboundOrderIds) {
+    public void releaseWave(Integer waveId, List<Integer> outboundOrderIds) {
         Wave wave = waveRepository.findById(waveId)
                 .orElseThrow(() -> new RuntimeException("Wave not found"));
 
-        if (wave.getStatus() != WaveStatus.ALLOCATED) {
-            throw new RuntimeException("Wave must be ALLOCATED to release");
+        if (wave.getStatus() != WaveStatus.RELEASED) {
+            throw new RuntimeException("Wave must be RELEASED to process");
         }
 
         // Strategy: Discrete Picking (One PickList per Order)
@@ -175,8 +178,9 @@ public class PickingService {
 
             PickList pickList = new PickList();
             pickList.setWave(wave);
-            pickList.setType(PickListType.SINGLE);
+            pickList.setPickListNumber("PL-" + System.currentTimeMillis() + "-" + orderId);
             pickList.setStatus(PickListStatus.PENDING);
+            pickList.setCreatedAt(LocalDateTime.now());
             pickList = pickListRepository.save(pickList);
 
             // Generate Tasks based on Allocated Inventory
@@ -190,7 +194,7 @@ public class PickingService {
             }
         }
 
-        wave.setStatus(WaveStatus.RELEASED);
+        wave.setStatus(WaveStatus.IN_PROGRESS);
         waveRepository.save(wave);
     }
 
@@ -201,17 +205,17 @@ public class PickingService {
         List<Inventory> allocatedInv = inventoryRepository.findByProductId(item.getProduct().getId()).stream()
                 .filter(inv -> inv.getStatus() == InventoryStatus.ALLOCATED)
                 .toList();
-        int qtyToPick = item.getQuantityOrdered();
+        double qtyToPick = item.getQuantityOrdered() != null ? item.getQuantityOrdered() : 0.0;
         for (Inventory inv : allocatedInv) {
             if (qtyToPick <= 0) break;
             // Check if this inventory is already assigned to a task?
             // We need a way to avoid double picking.
             // Let's assume we consume the allocation by creating a task.
-            int qty = Math.min(qtyToPick, inv.getQuantity());
+            double qty = Math.min(qtyToPick, inv.getQuantity());
             PickingTask task = new PickingTask();
             task.setOutboundOrderItem(item);
             task.setInventory(inv);
-            task.setQuantityToPick((double) qty);
+            task.setQuantityToPick(qty);
             task.setStatus(PickingTaskStatus.PENDING);
             task.setCreatedAt(LocalDateTime.now());
             pickingTaskRepository.save(task);

@@ -2,7 +2,7 @@ package com.mycompany.sapo_leyendo.model;
 
 public enum MoveTaskStatus {
     PENDING,
-    ASSIGNED,
+    IN_PROGRESS,
     COMPLETED,
     CANCELLED
 }

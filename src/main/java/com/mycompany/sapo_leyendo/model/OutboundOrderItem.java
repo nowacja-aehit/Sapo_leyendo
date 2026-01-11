@@ -30,14 +30,27 @@ public class OutboundOrderItem {
     @JoinColumn(name = "id_product", nullable = false)
     private Product product;
 
+    // Setter to handle productId from frontend JSON
+    @com.fasterxml.jackson.annotation.JsonSetter("productId")
+    public void setProductId(Integer productId) {
+        if (productId != null) {
+            this.product = new Product();
+            this.product.setId(productId);
+        }
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "id_uom", nullable = false)
+    private UnitOfMeasure uom;
+
     @Column(name = "quantity_ordered", nullable = false)
-    private Integer quantityOrdered;
+    private Double quantityOrdered;
 
     @Column(name = "quantity_picked", nullable = false)
-    private Integer quantityPicked = 0;
+    private Double quantityPicked = 0.0;
 
     @Column(name = "quantity_shipped", nullable = false)
-    private Integer quantityShipped = 0;
+    private Double quantityShipped = 0.0;
 
     @Column(name = "unit_price")
     private BigDecimal unitPrice;
@@ -58,17 +71,17 @@ public class OutboundOrderItem {
     private String status;
 
     @JsonProperty("ordered")
-    public Integer getOrderedQuantity() {
+    public Double getOrderedQuantity() {
         return quantityOrdered;
     }
 
     @JsonProperty("picked")
-    public Integer getPickedQuantity() {
+    public Double getPickedQuantity() {
         return quantityPicked;
     }
 
     @JsonProperty("shipped")
-    public Integer getShippedQuantity() {
+    public Double getShippedQuantity() {
         return quantityShipped;
     }
 

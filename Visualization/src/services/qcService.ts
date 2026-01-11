@@ -2,13 +2,16 @@ import axios from 'axios';
 
 const API_URL = '/api/qc';
 
+// Valid sourceType values: 'INBOUND', 'RETURN', 'INVENTORY', 'PRODUCTION'
+// Valid result values: 'PENDING', 'PASSED', 'FAILED', 'CONDITIONAL'
+
 export interface QcInspection {
     id: number;
     productId: number;
-    sourceType: string;
+    sourceType: string; // INBOUND | RETURN | INVENTORY | PRODUCTION
     referenceId: number;
     status: string;
-    result?: string;
+    result?: string; // PENDING | PASSED | FAILED | CONDITIONAL
     sampleSize: number;
 }
 
@@ -22,14 +25,14 @@ export interface NonConformanceReport {
 
 export const createInspection = async (productId: number, sourceType: string, referenceId: number, sampleSize: number): Promise<QcInspection> => {
     const response = await axios.post(`${API_URL}/inspections`, null, {
-        params: { productId, sourceType, referenceId, sampleSize }
+        params: { productId, sourceType: sourceType.toUpperCase(), referenceId, sampleSize }
     });
     return response.data;
 };
 
 export const executeInspection = async (inspectionId: number, result: string, inspectorId: number): Promise<QcInspection> => {
     const response = await axios.post(`${API_URL}/inspections/${inspectionId}/execute`, null, {
-        params: { result, inspectorId }
+        params: { result: result.toUpperCase(), inspectorId }
     });
     return response.data;
 };

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReturnsService {
@@ -90,6 +91,19 @@ public class ReturnsService {
         }
         
         return item;
+    }
+
+    public List<RmaRequest> getAllRmaRequests() {
+        return rmaRequestRepository.findAll();
+    }
+
+    public Optional<RmaRequest> getRmaRequestById(Integer id) {
+        return rmaRequestRepository.findById(id);
+    }
+
+    @Transactional
+    public void deleteRmaRequest(Integer id) {
+        rmaRequestRepository.deleteById(id);
     }
 
     private void createRefurbishTask(ReturnItem item) {

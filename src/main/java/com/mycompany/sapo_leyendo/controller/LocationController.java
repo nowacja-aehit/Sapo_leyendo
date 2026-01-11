@@ -1,5 +1,6 @@
 package com.mycompany.sapo_leyendo.controller;
 
+import com.mycompany.sapo_leyendo.dto.LocationCreateRequest;
 import com.mycompany.sapo_leyendo.model.Location;
 import com.mycompany.sapo_leyendo.model.LocationType;
 import com.mycompany.sapo_leyendo.model.Zone;
@@ -12,7 +13,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/locations")
-@CrossOrigin(origins = "http://localhost:5173")
 public class LocationController {
 
     @Autowired
@@ -31,8 +31,8 @@ public class LocationController {
     }
 
     @PostMapping
-    public Location createLocation(@RequestBody Location location) {
-        return locationService.saveLocation(location);
+    public Location createLocation(@RequestBody LocationCreateRequest request) {
+        return locationService.createLocationFromRequest(request);
     }
 
     @DeleteMapping("/{id}")

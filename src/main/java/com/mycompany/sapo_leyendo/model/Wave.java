@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "Waves")
@@ -16,22 +15,31 @@ import java.util.UUID;
 public class Wave {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_wave")
-    private UUID id;
+    private Integer id;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "wave_number", nullable = false, unique = true)
     private String name;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private WaveStatus status = WaveStatus.PLANNED;
+    private WaveStatus status = WaveStatus.CREATED;
 
-    @Column(name = "created_date")
-    private LocalDateTime createdDate;
+    @Column(name = "priority")
+    private Integer priority = 0;
 
-    @Column(name = "cutoff_time")
-    private LocalDateTime cutoffTime;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "released_at")
+    private LocalDateTime releasedAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
+    @Column(name = "id_user_created")
+    private Integer userCreatedId;
 
     @OneToMany(mappedBy = "wave", cascade = CascadeType.ALL)
     private List<PickList> pickLists;

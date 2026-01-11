@@ -1,6 +1,7 @@
 package com.mycompany.sapo_leyendo.model;
 
 import jakarta.persistence.*;
+import com.mycompany.sapo_leyendo.converter.LocalDateTimeStringConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -41,6 +42,7 @@ public class MoveTask {
     @Column(nullable = false)
     private MoveTaskStatus status = MoveTaskStatus.PENDING;
 
+    @Convert(converter = LocalDateTimeStringConverter.class)
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

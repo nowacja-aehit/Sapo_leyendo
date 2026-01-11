@@ -3,14 +3,15 @@ import axios from 'axios';
 const API_URL = '/api/picking';
 
 export interface Wave {
-    id: string; // UUID
+    id: number; // Integer from backend
+    name?: string;
     status: string;
     createdAt: string;
 }
 
 export interface PickTask {
-    id: string; // UUID
-    waveId: string;
+    id: number; // Integer from backend
+    waveId: number; // Integer from Wave
     sourceLocationId: number;
     targetLpn: string;
     productId: number;
@@ -28,14 +29,14 @@ export const createWave = async (outboundOrderIds: number[]): Promise<Wave> => {
     } catch (error) {
         console.error("Failed to create wave, using mock wave", error);
         return {
-            id: crypto.randomUUID(),
+            id: Math.floor(Math.random() * 10000),
             status: 'IN_PROGRESS',
             createdAt: new Date().toISOString(),
         } as Wave;
     }
 };
 
-export const getPickingTasks = async (waveId: string): Promise<PickTask[]> => {
+export const getPickingTasks = async (waveId: number): Promise<PickTask[]> => {
     try {
         const response = await axios.get(`${API_URL}/waves/${waveId}/tasks`);
         return response.data;
@@ -43,7 +44,7 @@ export const getPickingTasks = async (waveId: string): Promise<PickTask[]> => {
         console.error("Failed to load picking tasks, returning mock tasks", error);
         return [
             {
-                id: crypto.randomUUID(),
+                id: 1,
                 waveId,
                 sourceLocationId: 101,
                 targetLpn: 'LPN-0001',
@@ -55,7 +56,7 @@ export const getPickingTasks = async (waveId: string): Promise<PickTask[]> => {
                 locationName: 'A-01-01',
             },
             {
-                id: crypto.randomUUID(),
+                id: 2,
                 waveId,
                 sourceLocationId: 102,
                 targetLpn: 'LPN-0002',
@@ -70,7 +71,7 @@ export const getPickingTasks = async (waveId: string): Promise<PickTask[]> => {
     }
 };
 
-export const confirmPickTask = async (taskId: string, quantityPicked: number): Promise<void> => {
+export const confirmPickTask = async (taskId: number, quantityPicked: number): Promise<void> => {
     try {
         await axios.post(`${API_URL}/tasks/${taskId}/confirm`, null, {
             params: { quantityPicked }
