@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/packing")
-@CrossOrigin(origins = "http://localhost:5173")
 public class PackingController {
 
     @Autowired
@@ -21,7 +20,7 @@ public class PackingController {
     }
 
     @PostMapping("/shipments/{shipmentId}/parcels")
-    public ResponseEntity<Parcel> createParcel(@PathVariable Integer shipmentId, @RequestParam Integer packingMaterialId) {
+    public ResponseEntity<Parcel> createParcel(@PathVariable Integer shipmentId, @RequestParam(required = false) Integer packingMaterialId) {
         return ResponseEntity.ok(packingService.createParcel(shipmentId, packingMaterialId));
     }
 

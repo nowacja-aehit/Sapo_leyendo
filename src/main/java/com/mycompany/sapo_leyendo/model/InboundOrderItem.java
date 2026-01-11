@@ -28,7 +28,6 @@ public class InboundOrderItem {
     @JoinColumn(name = "id_product", nullable = false)
     private Product product;
 
-    @JsonProperty("expectedQuantity")
     @Column(name = "quantity_expected", nullable = false)
     private Integer quantityExpected;
 
@@ -39,6 +38,26 @@ public class InboundOrderItem {
     @Column(name = "batch_number")
     private String batchNumber;
 
+    // Transient field for JSON deserialization (not persisted)
+    @Transient
+    private Integer productId;
+
+    // Alias setter for JSON - accepts both "quantity" and "expectedQuantity"
+    @JsonProperty("quantity")
+    public void setQuantity(Integer quantity) {
+        this.quantityExpected = quantity;
+    }
+
+    @JsonProperty("expectedQuantity")
+    public Integer getExpectedQuantity() {
+        return quantityExpected;
+    }
+
+    @JsonProperty("expectedQuantity")
+    public void setExpectedQuantity(Integer quantity) {
+        this.quantityExpected = quantity;
+    }
+
     @JsonProperty("productName")
     public String getProductName() {
         return product != null ? product.getName() : null;
@@ -47,5 +66,14 @@ public class InboundOrderItem {
     @JsonProperty("sku")
     public String getSku() {
         return product != null ? product.getSku() : null;
+    }
+
+    public Integer getProductId() {
+        if (productId != null) return productId;
+        return product != null ? product.getId() : null;
+    }
+
+    public void setProductId(Integer productId) {
+        this.productId = productId;
     }
 }

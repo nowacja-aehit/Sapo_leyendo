@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, Download, Eye, Package, User, Calendar, DollarSign, Plus } from "lucide-react";
+import { Search, Filter, Download, Eye, Package, User, Calendar, DollarSign, Plus, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Order } from "../../data/mockData";
 import { fetchOrders, createOrder } from "../../services/api";
+import { fetchOutboundOrders, createOutboundOrder, addItemToOrder, fetchOrderItems, OutboundOrder, OutboundOrderItem } from "../../services/outboundService";
+import { fetchProducts, Product } from "../../services/productService";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +23,14 @@ import {
   SelectValue,
 } from "../ui/select";
 
+interface OrderItemDraft {
+  productId: number;
+  productName: string;
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+}
+
 export function OrdersView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -29,6 +39,11 @@ export function OrdersView() {
   const [showFilters, setShowFilters] = useState(false);
   const [items, setItems] = useState<Order[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orderItems, setOrderItems] = useState<OrderItemDraft[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [itemQuantity, setItemQuantity] = useState<number>(1);
+  const [itemPrice, setItemPrice] = useState<number>(0);
   const [newOrder, setNewOrder] = useState<Order>({
     id: "",
     orderNumber: "",
@@ -44,6 +59,14 @@ export function OrdersView() {
     const loadData = async () => {
       const data = await fetchOrders();
       setItems(data);
+      
+      // Load products for the dropdown
+      try {
+        const productData = await fetchProducts();
+        setProducts(productData);
+      } catch (err) {
+        console.error("Failed to load products", err);
+      }
     };
     loadData();
   }, []);
@@ -95,11 +118,78 @@ export function OrdersView() {
     setFilterPriority("all");
   };
 
+  const handleAddItemToList = () => {
+    if (!selectedProductId) return;
+    const product = products.find(p => p.id === Number(selectedProductId));
+    if (!product) return;
+    
+    setOrderItems(prev => [...prev, {
+      productId: product.id,
+      productName: product.name,
+      sku: product.sku,
+      quantity: itemQuantity,
+      unitPrice: itemPrice || product.unitPrice || 0,
+    }]);
+    
+    setSelectedProductId("");
+    setItemQuantity(1);
+    setItemPrice(0);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setOrderItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const calculateTotal = () => {
+    return orderItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  };
+
   const handleCreateOrder = async () => {
-    const payload = { ...newOrder, id: crypto.randomUUID() };
-    const created = await createOrder(payload);
-    setItems((prev) => [...prev, created]);
-    setIsDialogOpen(false);
+    try {
+      // Create the order via outbound API
+      const orderData: OutboundOrder = {
+        referenceNumber: newOrder.orderNumber || `ORD-${Date.now()}`,
+        status: "PLANNED",
+        destination: newOrder.customer,
+        customerName: newOrder.customer,
+        priority: newOrder.priority,
+        shipDate: newOrder.date,
+      };
+      
+      const created = await createOutboundOrder(orderData);
+      
+      // Add items to the order
+      for (const item of orderItems) {
+        await addItemToOrder(created.id!, {
+          product: { id: item.productId },
+          quantityOrdered: item.quantity,
+          unitPrice: item.unitPrice,
+        });
+      }
+      
+      // Refresh the list
+      const data = await fetchOrders();
+      setItems(data);
+      
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error("Failed to create order", error);
+      // Fallback to local state
+      const payload = { 
+        ...newOrder, 
+        id: crypto.randomUUID(),
+        items: orderItems.reduce((sum, i) => sum + i.quantity, 0),
+        total: calculateTotal(),
+      };
+      const created = await createOrder(payload);
+      setItems((prev) => [...prev, created]);
+      setIsDialogOpen(false);
+      resetForm();
+    }
+  };
+
+  const resetForm = () => {
     setNewOrder({
       id: "",
       orderNumber: "",
@@ -110,6 +200,10 @@ export function OrdersView() {
       date: new Date().toISOString().split("T")[0],
       priority: "Medium",
     });
+    setOrderItems([]);
+    setSelectedProductId("");
+    setItemQuantity(1);
+    setItemPrice(0);
   };
 
   const advanceStatus = (order: Order) => {
@@ -338,7 +432,7 @@ export function OrdersView() {
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">Całkowita wartość</div>
-                    <div className="text-gray-900">${selectedOrder.total.toLocaleString()}</div>
+                    <div className="text-gray-900">${(selectedOrder.total ?? 0).toLocaleString()}</div>
                   </div>
                 </div>
               </div>
@@ -367,10 +461,10 @@ export function OrdersView() {
       </Dialog>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nowe zamówienie</DialogTitle>
-            <DialogDescription>Wprowadź podstawowe dane zamówienia</DialogDescription>
+            <DialogDescription>Wprowadź dane zamówienia i dodaj produkty</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-2">
@@ -392,40 +486,6 @@ export function OrdersView() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-2">
-              <label className="text-sm text-gray-700 col-span-1">Produkty</label>
-              <Input
-                className="col-span-3"
-                type="number"
-                value={newOrder.items}
-                onChange={(e) => setNewOrder({ ...newOrder, items: parseInt(e.target.value) || 0 })}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
-              <label className="text-sm text-gray-700 col-span-1">Kwota</label>
-              <Input
-                className="col-span-3"
-                type="number"
-                step="0.01"
-                value={newOrder.total}
-                onChange={(e) => setNewOrder({ ...newOrder, total: parseFloat(e.target.value) || 0 })}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
-              <label className="text-sm text-gray-700 col-span-1">Status</label>
-              <Select value={newOrder.status} onValueChange={(value) => setNewOrder({ ...newOrder, status: value as Order['status'] })}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pending">Oczekujące</SelectItem>
-                  <SelectItem value="Processing">W trakcie</SelectItem>
-                  <SelectItem value="Shipped">Wysłane</SelectItem>
-                  <SelectItem value="Delivered">Dostarczone</SelectItem>
-                  <SelectItem value="Cancelled">Anulowane</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-2">
               <label className="text-sm text-gray-700 col-span-1">Priorytet</label>
               <Select value={newOrder.priority} onValueChange={(value) => setNewOrder({ ...newOrder, priority: value as Order['priority'] })}>
                 <SelectTrigger className="col-span-3">
@@ -439,7 +499,7 @@ export function OrdersView() {
               </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-2">
-              <label className="text-sm text-gray-700 col-span-1">Data</label>
+              <label className="text-sm text-gray-700 col-span-1">Data wysyłki</label>
               <Input
                 className="col-span-3"
                 type="date"
@@ -447,10 +507,99 @@ export function OrdersView() {
                 onChange={(e) => setNewOrder({ ...newOrder, date: e.target.value })}
               />
             </div>
+
+            {/* Products Section */}
+            <div className="border-t pt-4 mt-2">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Produkty w zamówieniu</h4>
+              
+              {/* Add Product Form */}
+              <div className="flex gap-2 mb-3">
+                <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Wybierz produkt..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((product) => (
+                      <SelectItem key={product.id} value={String(product.id)}>
+                        {product.name} ({product.sku})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  min="1"
+                  className="w-20"
+                  placeholder="Ilość"
+                  value={itemQuantity}
+                  onChange={(e) => setItemQuantity(parseInt(e.target.value) || 1)}
+                />
+                <Input
+                  type="number"
+                  step="0.01"
+                  className="w-24"
+                  placeholder="Cena"
+                  value={itemPrice || ""}
+                  onChange={(e) => setItemPrice(parseFloat(e.target.value) || 0)}
+                />
+                <Button type="button" variant="outline" onClick={handleAddItemToList}>
+                  <Plus size={16} />
+                </Button>
+              </div>
+
+              {/* Items List */}
+              {orderItems.length > 0 && (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Produkt</th>
+                        <th className="px-3 py-2 text-left">SKU</th>
+                        <th className="px-3 py-2 text-right">Ilość</th>
+                        <th className="px-3 py-2 text-right">Cena</th>
+                        <th className="px-3 py-2 text-right">Suma</th>
+                        <th className="px-3 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {orderItems.map((item, idx) => (
+                        <tr key={idx}>
+                          <td className="px-3 py-2">{item.productName}</td>
+                          <td className="px-3 py-2 text-gray-500">{item.sku}</td>
+                          <td className="px-3 py-2 text-right">{item.quantity}</td>
+                          <td className="px-3 py-2 text-right">${item.unitPrice.toFixed(2)}</td>
+                          <td className="px-3 py-2 text-right font-medium">${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                          <td className="px-3 py-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleRemoveItem(idx)}>
+                              <Trash2 size={14} className="text-red-500" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-gray-50">
+                      <tr>
+                        <td colSpan={4} className="px-3 py-2 text-right font-medium">Razem:</td>
+                        <td className="px-3 py-2 text-right font-bold">${calculateTotal().toFixed(2)}</td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+
+              {orderItems.length === 0 && (
+                <div className="text-center py-4 text-gray-500 border border-dashed rounded-lg">
+                  Dodaj produkty do zamówienia
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Anuluj</Button>
-            <Button onClick={handleCreateOrder}>Zapisz</Button>
+            <Button variant="outline" onClick={() => { setIsDialogOpen(false); resetForm(); }}>Anuluj</Button>
+            <Button onClick={handleCreateOrder} disabled={orderItems.length === 0}>
+              Zapisz zamówienie
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

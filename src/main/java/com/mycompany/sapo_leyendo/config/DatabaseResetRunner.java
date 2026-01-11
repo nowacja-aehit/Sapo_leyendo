@@ -15,7 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Resets the database at startup when CLEARDATABASE=1 is present in env vars.
+ * Initializes or resets the database at startup.
+ * - For SQLite: Auto-initializes if database is empty, or resets when CLEARDATABASE=1
+ * - For MySQL: Only resets when CLEARDATABASE=1 (DemoDataLoader handles initialization)
  */
 @Component
 @Order(0)
@@ -28,29 +30,30 @@ public class DatabaseResetRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        List<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
+        boolean sqliteProfile = !activeProfiles.contains("mysql");
         boolean shouldClear = shouldClearDatabase();
-        if (!shouldClear) {
-            log.info("CLEARDATABASE flag is not '1'. Skipping database reset.");
+        
+        if (shouldClear) {
+            log.warn("CLEARDATABASE=1 detected. Clearing database before seeding. Aktywne profile: {}", activeProfiles);
+            if (sqliteProfile) {
+                resetAndSeedSqlite();
+            } else {
+                resetMySql();
+            }
             return;
         }
-
-        List<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
-        log.warn("CLEARDATABASE=1 detected. Clearing database before seeding. Aktywne profile: {}", activeProfiles);
-
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        boolean mysqlProfile = activeProfiles.contains("mysql");
-
-        if (mysqlProfile) {
-            resetMySql(jdbcTemplate);
-            // DemoDataLoader (mysql profile) will repopulate on empty tables
-        } else {
-            resetSqlite(jdbcTemplate);
-            reseedSqlite();
+        
+        // For SQLite: check if database needs initialization (is empty)
+        if (sqliteProfile && isDatabaseEmpty()) {
+            log.info("📦 SQLite database is empty. Initializing with schema and seed data...");
+            seedSqlite();
+        } else if (sqliteProfile) {
+            log.info("📦 SQLite database already initialized. Skipping seed.");
         }
     }
 
     private boolean shouldClearDatabase() {
-        // Read flag from Spring Environment first (picks up App Service settings), fall back to process env
         String flag = environment.getProperty("CLEARDATABASE",
                 System.getenv().getOrDefault("CLEARDATABASE", "0"));
         if (flag == null) {
@@ -60,8 +63,23 @@ public class DatabaseResetRunner implements CommandLineRunner {
         log.info("CLEARDATABASE resolved to '{}'.", flag);
         return "1".equals(flag);
     }
+    
+    private boolean isDatabaseEmpty() {
+        try {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+            // Check if Products table exists and has data
+            Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM Products", Integer.class);
+            return count == null || count == 0;
+        } catch (Exception e) {
+            // Table doesn't exist or other error - database needs initialization
+            log.debug("Database check failed (likely empty): {}", e.getMessage());
+            return true;
+        }
+    }
 
-    private void resetMySql(JdbcTemplate jdbcTemplate) {
+    private void resetMySql() {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
         List<String> tables = jdbcTemplate.queryForList(
                 "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()",
@@ -71,7 +89,8 @@ public class DatabaseResetRunner implements CommandLineRunner {
         log.info("MySQL tables truncated.");
     }
 
-    private void resetSqlite(JdbcTemplate jdbcTemplate) {
+    private void resetAndSeedSqlite() {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         jdbcTemplate.execute("PRAGMA foreign_keys = OFF");
         List<String> tables = jdbcTemplate.queryForList(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
@@ -79,13 +98,14 @@ public class DatabaseResetRunner implements CommandLineRunner {
         tables.forEach(table -> jdbcTemplate.execute("DROP TABLE IF EXISTS \"" + table + "\""));
         jdbcTemplate.execute("PRAGMA foreign_keys = ON");
         log.info("SQLite tables dropped.");
+        seedSqlite();
     }
 
-    private void reseedSqlite() {
+    private void seedSqlite() {
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
         populator.addScript(new ClassPathResource("database/CreateDB_sqlite.sql"));
         populator.addScript(new ClassPathResource("database/FillDatabase_sqlite.sql"));
         populator.execute(dataSource);
-        log.info("SQLite schema and seed data reloaded.");
+        log.info("✅ SQLite schema and seed data loaded successfully.");
     }
 }

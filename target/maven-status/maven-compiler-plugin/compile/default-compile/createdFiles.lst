@@ -2,6 +2,7 @@ com\mycompany\sapo_leyendo\repository\AuditLogRepository.class
 com\mycompany\sapo_leyendo\service\OutboundService.class
 com\mycompany\sapo_leyendo\controller\InventoryController.class
 com\mycompany\sapo_leyendo\repository\PermissionRepository.class
+com\mycompany\sapo_leyendo\model\NcrStatus.class
 com\mycompany\sapo_leyendo\dto\dashboard\DashboardOrder.class
 com\mycompany\sapo_leyendo\dto\UserInfo.class
 com\mycompany\sapo_leyendo\model\PackingStation.class
@@ -12,11 +13,13 @@ com\mycompany\sapo_leyendo\model\LocationStatus.class
 com\mycompany\sapo_leyendo\model\ProductCategory.class
 com\mycompany\sapo_leyendo\repository\InboundOrderRepository.class
 com\mycompany\sapo_leyendo\model\ParcelItem.class
+com\mycompany\sapo_leyendo\controller\TelemetryController.class
 com\mycompany\sapo_leyendo\model\InventoryStatus.class
 com\mycompany\sapo_leyendo\repository\MoveTaskRepository.class
 com\mycompany\sapo_leyendo\controller\ReportingController.class
 com\mycompany\sapo_leyendo\model\ReturnItem.class
 com\mycompany\sapo_leyendo\model\GradingStatus.class
+com\mycompany\sapo_leyendo\config\CorsConfig.class
 com\mycompany\sapo_leyendo\model\TestPlan.class
 com\mycompany\sapo_leyendo\repository\ReportDefinitionRepository.class
 com\mycompany\sapo_leyendo\repository\UserRepository.class
@@ -57,6 +60,7 @@ com\mycompany\sapo_leyendo\repository\UnitOfMeasureRepository.class
 com\mycompany\sapo_leyendo\repository\WaveRepository.class
 com\mycompany\sapo_leyendo\repository\PackingStationRepository.class
 com\mycompany\sapo_leyendo\repository\RmaRequestRepository.class
+com\mycompany\sapo_leyendo\dto\ProductCreateRequest.class
 com\mycompany\sapo_leyendo\repository\StockCountSessionRepository.class
 com\mycompany\sapo_leyendo\model\TransportLoad.class
 com\mycompany\sapo_leyendo\controller\PackingController.class
@@ -65,6 +69,8 @@ com\mycompany\sapo_leyendo\controller\PickingController.class
 com\mycompany\sapo_leyendo\model\Role.class
 com\mycompany\sapo_leyendo\model\AuditLog.class
 com\mycompany\sapo_leyendo\model\RefurbishTask.class
+com\mycompany\sapo_leyendo\repository\OutboundOrderItemRepository.class
+com\mycompany\sapo_leyendo\model\NcrSeverity.class
 com\mycompany\sapo_leyendo\model\Receipt.class
 com\mycompany\sapo_leyendo\model\PickList.class
 com\mycompany\sapo_leyendo\controller\ReportController.class
@@ -74,10 +80,12 @@ com\mycompany\sapo_leyendo\controller\MoveTaskController.class
 com\mycompany\sapo_leyendo\service\ReportingService.class
 com\mycompany\sapo_leyendo\service\UserService.class
 com\mycompany\sapo_leyendo\model\RmaRequest.class
+com\mycompany\sapo_leyendo\converter\LocalDateTimeStringConverter.class
 com\mycompany\sapo_leyendo\model\User.class
 com\mycompany\sapo_leyendo\model\PickTask.class
 com\mycompany\sapo_leyendo\security\CustomUserDetailsService.class
 com\mycompany\sapo_leyendo\model\KpiMetric.class
+com\mycompany\sapo_leyendo\model\NcrDisposition.class
 com\mycompany\sapo_leyendo\repository\ParcelRepository.class
 com\mycompany\sapo_leyendo\repository\PackingMaterialRepository.class
 com\mycompany\sapo_leyendo\service\PackingService.class
@@ -96,12 +104,15 @@ com\mycompany\sapo_leyendo\model\Permission.class
 com\mycompany\sapo_leyendo\repository\ParcelItemRepository.class
 com\mycompany\sapo_leyendo\service\ReturnsService$1.class
 com\mycompany\sapo_leyendo\config\DatabaseResetRunner.class
+com\mycompany\sapo_leyendo\config\HttpLoggingConfig$1.class
 com\mycompany\sapo_leyendo\model\RefurbishStatus.class
 com\mycompany\sapo_leyendo\model\Inventory.class
 com\mycompany\sapo_leyendo\model\NonConformanceReport.class
 com\mycompany\sapo_leyendo\model\Wave.class
 com\mycompany\sapo_leyendo\repository\PickListRepository.class
 com\mycompany\sapo_leyendo\repository\QcInspectionRepository.class
+com\mycompany\sapo_leyendo\config\HttpLoggingConfig.class
+com\mycompany\sapo_leyendo\dto\LocationCreateRequest.class
 com\mycompany\sapo_leyendo\model\ReportDefinition.class
 com\mycompany\sapo_leyendo\model\PickingTaskStatus.class
 com\mycompany\sapo_leyendo\model\Product.class

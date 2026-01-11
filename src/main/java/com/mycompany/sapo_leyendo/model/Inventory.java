@@ -2,6 +2,7 @@ package com.mycompany.sapo_leyendo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mycompany.sapo_leyendo.converter.LocalDateTimeStringConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -52,7 +53,11 @@ public class Inventory {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private InventoryStatus status = InventoryStatus.AVAILABLE;
+
+    @Column(name = "unit_price")
+    private java.math.BigDecimal unitPrice; // Override product price for this specific inventory
     
+    @Convert(converter = LocalDateTimeStringConverter.class)
     @Column(name = "received_at")
     private LocalDateTime receivedAt;
 
@@ -94,7 +99,15 @@ public class Inventory {
 
     @JsonProperty("price")
     public java.math.BigDecimal getPriceValue() {
+        // Return inventory-specific price if set, otherwise use product price
+        if (unitPrice != null) {
+            return unitPrice;
+        }
         return product != null ? product.getPriceValue() : null;
+    }
+
+    public void setUnitPrice(java.math.BigDecimal price) {
+        this.unitPrice = price;
     }
 
     @JsonProperty("reorderLevel")

@@ -1,6 +1,7 @@
 package com.mycompany.sapo_leyendo.model;
 
 import jakarta.persistence.*;
+import com.mycompany.sapo_leyendo.converter.LocalDateTimeStringConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,9 +26,11 @@ public class DockAppointment {
     @JoinColumn(name = "id_inbound_order")
     private InboundOrder inboundOrder;
 
+    @Convert(converter = LocalDateTimeStringConverter.class)
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
+    @Convert(converter = LocalDateTimeStringConverter.class)
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 

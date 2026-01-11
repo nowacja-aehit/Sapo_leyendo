@@ -1,5 +1,6 @@
 package com.mycompany.sapo_leyendo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class ReturnItem {
 
     @ManyToOne
     @JoinColumn(name = "id_rma", nullable = false)
+    @JsonIgnore
     private RmaRequest rmaRequest;
 
     @ManyToOne

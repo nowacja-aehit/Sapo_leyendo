@@ -21,14 +21,13 @@ public class Carrier {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(name = "service_type")
+    @Transient
     private String serviceType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "integration_type")
+    @Transient
     private IntegrationType integrationType;
 
-    @Column(name = "cutoff_time")
+    @Transient
     private LocalTime cutoffTime;
     
     @Column(name = "tracking_url_template")

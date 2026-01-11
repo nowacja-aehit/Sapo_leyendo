@@ -7,11 +7,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class SpaController {
 
     // Forward all non-API, non-static routes to index.html for SPA routing
+    // Exclude /api/** paths to let REST controllers handle them
     @RequestMapping(value = {
         "/",
-        "/{path:[^\\.]*}",
-        "/{path:[^\\.]*}/{subpath:[^\\.]*}",
-        "/{path:[^\\.]*}/{subpath:[^\\.]*}/{subsubpath:[^\\.]*}"
+        "/{path:^(?!api$).*}",
+        "/{path:^(?!api$).*}/{subpath:[^\\.]*}",
+        "/{path:^(?!api$).*}/{subpath:[^\\.]*}/{subsubpath:[^\\.]*}"
     })
     public String forward() {
         return "forward:/index.html";

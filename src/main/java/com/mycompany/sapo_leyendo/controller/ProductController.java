@@ -1,5 +1,6 @@
 package com.mycompany.sapo_leyendo.controller;
 
+import com.mycompany.sapo_leyendo.dto.ProductCreateRequest;
 import com.mycompany.sapo_leyendo.model.Product;
 import com.mycompany.sapo_leyendo.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +33,35 @@ public class ProductController {
     }
 
     @PostMapping
-    public Product createProduct(@RequestBody Product product) {
+    public Product createProduct(@RequestBody ProductCreateRequest request) {
+        Product product = new Product();
+        product.setSku(request.getSku());
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setMinStockLevel(request.getMinStock() != null ? request.getMinStock() : 0);
+        // Ustaw domyślny UOM = 1 (EA)
+        product.setIdBaseUom(1);
         return productService.createProduct(product);
+    }
+
+    // Alternate endpoint for backward compatibility - accepts full Product object
+    @PostMapping("/direct")
+    public Product createProductDirect(@RequestBody Product product) {
+        // Ensure required fields are set
+        if (product.getIdBaseUom() == null) {
+            product.setIdBaseUom(1); // Default UOM
+        }
+        return productService.createProduct(product);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> updateProduct(@PathVariable Integer id, @RequestBody Product product) {
+        return productService.getProductById(id)
+                .map(existing -> {
+                    product.setId(id);
+                    return ResponseEntity.ok(productService.updateProduct(product));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")

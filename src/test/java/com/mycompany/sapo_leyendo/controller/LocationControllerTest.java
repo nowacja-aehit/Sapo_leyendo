@@ -67,10 +67,8 @@ class LocationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "name", "LOC-INT-1",
-                                "barcode", "LOC-INT-1",
-                                "zone", Map.of("id", zoneId),
-                                "locationType", Map.of("id", typeId),
-                                "pickSequence", 10
+                                "zone", "ZONE-INT",
+                                "locationTypeId", typeId
                         ))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())

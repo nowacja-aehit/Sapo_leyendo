@@ -179,6 +179,7 @@ CREATE TABLE Inventory (
     batch_number VARCHAR(100) NULL,
     expiry_date TEXT NULL, -- Używamy TEXT dla dat
     reorder_level INTEGER NULL,
+    unit_price DECIMAL(10, 2) NULL, -- Override product price for this specific inventory
     status TEXT NOT NULL DEFAULT 'AVAILABLE' CHECK(status IN ('AVAILABLE', 'ALLOCATED', 'QC_HOLD', 'BLOCKED', 'DAMAGED')),
     received_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
     
@@ -205,7 +206,7 @@ DROP TABLE IF EXISTS GoodsReceived;
 CREATE TABLE InboundOrders (
     id_inbound_order INTEGER PRIMARY KEY AUTOINCREMENT,
     reference_number VARCHAR(100) UNIQUE NOT NULL,
-    status TEXT NOT NULL DEFAULT 'PLANNED' CHECK(status IN ('PLANNED', 'RECEIVED', 'CANCELLED')),
+    status TEXT NOT NULL DEFAULT 'PLANNED' CHECK(status IN ('PLANNED', 'ARRIVED', 'IN_PROGRESS', 'RECEIVED', 'CANCELLED')),
     expected_date TEXT NULL,
     supplier VARCHAR(255) NULL,
     dock_id INTEGER NULL,
@@ -228,7 +229,7 @@ CREATE TABLE InboundOrderItems (
 CREATE TABLE OutboundOrders (
     id_outbound_order INTEGER PRIMARY KEY AUTOINCREMENT,
     reference_number VARCHAR(100) UNIQUE NOT NULL,
-    status TEXT NOT NULL DEFAULT 'NEW' CHECK(status IN ('NEW', 'ALLOCATED', 'PICKING', 'PACKED', 'SHIPPED', 'CANCELLED')),
+    status TEXT NOT NULL DEFAULT 'NEW' CHECK(status IN ('NEW', 'PLANNED', 'PENDING', 'ALLOCATED', 'PICKING', 'PACKED', 'SHIPPED', 'DELIVERED', 'CANCELLED')),
     ship_date TEXT NULL,
     destination VARCHAR(255) NULL,
     customer_name VARCHAR(255) NULL,
@@ -323,12 +324,252 @@ DROP TABLE IF EXISTS PackingMaterials;
 DROP TABLE IF EXISTS ShipmentLines;
 DROP TABLE IF EXISTS Shipments;
 DROP TABLE IF EXISTS Carriers;
+DROP TABLE IF EXISTS TransportLoads;
+DROP TABLE IF EXISTS Manifests;
+DROP TABLE IF EXISTS Waves;
+DROP TABLE IF EXISTS PickLists;
+DROP TABLE IF EXISTS PickTasks;
+DROP TABLE IF EXISTS TestPlans;
+DROP TABLE IF EXISTS QcInspections;
+DROP TABLE IF EXISTS NonConformanceReports;
+DROP TABLE IF EXISTS MoveTasks;
+DROP TABLE IF EXISTS AuditLogs;
+DROP TABLE IF EXISTS KpiMetrics;
+DROP TABLE IF EXISTS Receipts;
+DROP TABLE IF EXISTS DockAppointments;
+DROP TABLE IF EXISTS StockCountSessions;
+DROP TABLE IF EXISTS ReportDefinitions;
+DROP TABLE IF EXISTS PackingStations;
 
 -- Tabela `Carriers`
 CREATE TABLE Carriers (
     id_carrier INTEGER PRIMARY KEY, -- ID podawane w skrypcie
     name VARCHAR(100) NOT NULL,
     tracking_url_template VARCHAR(255) NULL
+);
+
+-- Tabela `TransportLoads` (Ładunki Transportowe)
+CREATE TABLE TransportLoads (
+    id_load INTEGER PRIMARY KEY AUTOINCREMENT,
+    load_number VARCHAR(100) UNIQUE NOT NULL,
+    id_carrier INTEGER NULL,
+    scheduled_departure TEXT NULL,
+    actual_departure TEXT NULL,
+    status TEXT NOT NULL DEFAULT 'PLANNING' CHECK(status IN ('PLANNING', 'LOADING', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED')),
+    trailer_number VARCHAR(50) NULL,
+    seal_number VARCHAR(50) NULL,
+    driver_name VARCHAR(100) NULL,
+    driver_phone VARCHAR(30) NULL,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    FOREIGN KEY (id_carrier) REFERENCES Carriers(id_carrier)
+);
+
+-- Tabela `Manifests`
+CREATE TABLE Manifests (
+    id_manifest INTEGER PRIMARY KEY AUTOINCREMENT,
+    manifest_number VARCHAR(100) UNIQUE NOT NULL,
+    id_load INTEGER NULL,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    FOREIGN KEY (id_load) REFERENCES TransportLoads(id_load)
+);
+
+-- Tabela `Waves` (Fale kompletacji)
+CREATE TABLE Waves (
+    id_wave INTEGER PRIMARY KEY AUTOINCREMENT,
+    wave_number VARCHAR(100) UNIQUE NOT NULL,
+    status TEXT NOT NULL DEFAULT 'CREATED' CHECK(status IN ('CREATED', 'RELEASED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    priority INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    released_at TEXT NULL,
+    completed_at TEXT NULL,
+    id_user_created INTEGER NULL,
+    FOREIGN KEY (id_user_created) REFERENCES Users(id_user)
+);
+
+-- Tabela `PickLists` (Listy kompletacji)
+CREATE TABLE PickLists (
+    id_pick_list INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_wave INTEGER NULL,
+    pick_list_number VARCHAR(100) UNIQUE NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    id_user_assigned INTEGER NULL,
+    assigned_at TEXT NULL,
+    completed_at TEXT NULL,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    FOREIGN KEY (id_wave) REFERENCES Waves(id_wave),
+    FOREIGN KEY (id_user_assigned) REFERENCES Users(id_user)
+);
+
+-- Tabela `PickTasks` (Zadania kompletacji)
+CREATE TABLE PickTasks (
+    id_pick_task INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_pick_list INTEGER NULL,
+    id_outbound_order_item INTEGER NOT NULL,
+    id_inventory INTEGER NOT NULL,
+    quantity_to_pick REAL NOT NULL,
+    quantity_picked REAL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'SHORT', 'CANCELLED')),
+    pick_sequence INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    picked_at TEXT NULL,
+    FOREIGN KEY (id_pick_list) REFERENCES PickLists(id_pick_list),
+    FOREIGN KEY (id_outbound_order_item) REFERENCES OutboundOrderItems(id_outbound_order_item),
+    FOREIGN KEY (id_inventory) REFERENCES Inventory(id_inventory)
+);
+
+-- Tabela `TestPlans` (Plany testowe QC)
+CREATE TABLE TestPlans (
+    id_test_plan INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    test_steps TEXT NULL,
+    is_active BOOLEAN DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now'))
+);
+
+-- Tabela `QcInspections` (Inspekcje jakości)
+CREATE TABLE QcInspections (
+    id_qc_inspection INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_product INTEGER NULL,
+    id_inventory INTEGER NULL,
+    source_type TEXT NOT NULL CHECK(source_type IN ('INBOUND', 'RETURN', 'INVENTORY', 'PRODUCTION')),
+    source_id INTEGER NULL,
+    id_test_plan INTEGER NULL,
+    result TEXT NOT NULL DEFAULT 'PENDING' CHECK(result IN ('PENDING', 'PASSED', 'FAILED', 'CONDITIONAL')),
+    inspector_notes TEXT NULL,
+    id_user_inspector INTEGER NULL,
+    inspected_at TEXT NULL,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    FOREIGN KEY (id_product) REFERENCES Products(id_product),
+    FOREIGN KEY (id_inventory) REFERENCES Inventory(id_inventory),
+    FOREIGN KEY (id_test_plan) REFERENCES TestPlans(id_test_plan),
+    FOREIGN KEY (id_user_inspector) REFERENCES Users(id_user)
+);
+
+-- Tabela `NonConformanceReports` (Raporty niezgodności)
+CREATE TABLE NonConformanceReports (
+    id_ncr INTEGER PRIMARY KEY AUTOINCREMENT,
+    ncr_number VARCHAR(100) UNIQUE NOT NULL,
+    id_qc_inspection INTEGER NULL,
+    defect_type TEXT NOT NULL CHECK(defect_type IN ('DIMENSIONAL', 'COSMETIC', 'FUNCTIONAL', 'PACKAGING', 'DOCUMENTATION', 'OTHER')),
+    severity TEXT NOT NULL DEFAULT 'MINOR' CHECK(severity IN ('CRITICAL', 'MAJOR', 'MINOR')),
+    description TEXT NOT NULL,
+    disposition TEXT NULL CHECK(disposition IN ('RESTOCK', 'REFURBISH', 'VENDOR', 'SCRAP', 'USE_AS_IS')),
+    corrective_action TEXT NULL,
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK(status IN ('OPEN', 'IN_REVIEW', 'CLOSED')),
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    closed_at TEXT NULL,
+    FOREIGN KEY (id_qc_inspection) REFERENCES QcInspections(id_qc_inspection)
+);
+
+-- Tabela `MoveTasks` (Zadania przesunięć)
+CREATE TABLE MoveTasks (
+    id_move_task INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL DEFAULT 'PUTAWAY' CHECK(type IN ('REPLENISH', 'PUTAWAY', 'RELOCATE', 'CONSOLIDATE')),
+    id_inventory INTEGER NULL,
+    id_source_location INTEGER NULL,
+    id_target_location INTEGER NULL,
+    priority INTEGER DEFAULT 5,
+    status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    FOREIGN KEY (id_inventory) REFERENCES Inventory(id_inventory),
+    FOREIGN KEY (id_source_location) REFERENCES Locations(id_location),
+    FOREIGN KEY (id_target_location) REFERENCES Locations(id_location)
+);
+
+-- Tabela `AuditLogs` (Logi audytowe)
+CREATE TABLE AuditLogs (
+    id_audit_log INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_type VARCHAR(50) NOT NULL,
+    entity_id INTEGER NOT NULL,
+    action TEXT NOT NULL CHECK(action IN ('CREATE', 'UPDATE', 'DELETE', 'STATUS_CHANGE')),
+    old_value TEXT NULL,
+    new_value TEXT NULL,
+    id_user INTEGER NULL,
+    timestamp TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    ip_address VARCHAR(45) NULL,
+    FOREIGN KEY (id_user) REFERENCES Users(id_user)
+);
+
+-- Tabela `KpiMetrics` (Metryki KPI)
+CREATE TABLE KpiMetrics (
+    id_kpi INTEGER PRIMARY KEY AUTOINCREMENT,
+    metric_name VARCHAR(100) NOT NULL,
+    metric_value REAL NOT NULL,
+    metric_unit VARCHAR(30) NULL,
+    period_start TEXT NOT NULL,
+    period_end TEXT NOT NULL,
+    dimension_type VARCHAR(50) NULL,
+    dimension_value VARCHAR(100) NULL,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now'))
+);
+
+-- Tabela `Receipts` (Potwierdzenia przyjęć - szczegóły pozycji)
+CREATE TABLE Receipts (
+    id_receipt INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_inbound_order_item INTEGER NOT NULL,
+    lpn VARCHAR(100) NOT NULL,
+    quantity INTEGER NOT NULL,
+    operator_id INTEGER NULL,
+    timestamp TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    damage_code VARCHAR(50) NULL,
+    FOREIGN KEY (id_inbound_order_item) REFERENCES InboundOrderItems(id_inbound_order_item),
+    FOREIGN KEY (operator_id) REFERENCES Users(id_user)
+);
+
+-- Tabela `DockAppointments` (Rezerwacje doków)
+CREATE TABLE DockAppointments (
+    id_dock_appointment INTEGER PRIMARY KEY AUTOINCREMENT,
+    dock_id INTEGER NOT NULL,
+    id_inbound_order INTEGER NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL,
+    carrier_name VARCHAR(100) NULL,
+    FOREIGN KEY (dock_id) REFERENCES Locations(id_location),
+    FOREIGN KEY (id_inbound_order) REFERENCES InboundOrders(id_inbound_order)
+);
+
+-- Tabela `StockCountSessions` (Sesje inwentaryzacji)
+CREATE TABLE StockCountSessions (
+    id_session INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_name VARCHAR(100) NOT NULL,
+    count_type TEXT NOT NULL DEFAULT 'CYCLE' CHECK(count_type IN ('FULL', 'CYCLE', 'ABC', 'SPOT')),
+    status TEXT NOT NULL DEFAULT 'PLANNED' CHECK(status IN ('PLANNED', 'IN_PROGRESS', 'REVIEW', 'COMPLETED', 'CANCELLED')),
+    scope_zone_id INTEGER NULL,
+    scope_category_id INTEGER NULL,
+    scheduled_date TEXT NULL,
+    started_at TEXT NULL,
+    completed_at TEXT NULL,
+    id_user_created INTEGER NULL,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    FOREIGN KEY (scope_zone_id) REFERENCES Zones(id_zone),
+    FOREIGN KEY (scope_category_id) REFERENCES ProductCategories(id_category),
+    FOREIGN KEY (id_user_created) REFERENCES Users(id_user)
+);
+
+-- Tabela `ReportDefinitions` (Definicje raportów)
+CREATE TABLE ReportDefinitions (
+    id_report_definition INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    query_template TEXT NOT NULL,
+    parameters TEXT NULL,
+    is_active BOOLEAN DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%S', 'now')),
+    id_user_created INTEGER NULL,
+    FOREIGN KEY (id_user_created) REFERENCES Users(id_user)
+);
+
+-- Tabela `PackingStations` (Stacje pakowania)
+CREATE TABLE PackingStations (
+    id_packing_station INTEGER PRIMARY KEY AUTOINCREMENT,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    id_location INTEGER NULL,
+    is_active BOOLEAN DEFAULT 1,
+    current_id_user INTEGER NULL,
+    FOREIGN KEY (id_location) REFERENCES Locations(id_location),
+    FOREIGN KEY (current_id_user) REFERENCES Users(id_user)
 );
 
 -- Tabela `Shipments`
@@ -343,7 +584,7 @@ CREATE TABLE Shipments (
     status TEXT NOT NULL DEFAULT 'PACKING' CHECK(status IN ('PACKING', 'PACKED', 'SHIPPED')),
     FOREIGN KEY (id_outbound_order) REFERENCES OutboundOrders(id_outbound_order),
     FOREIGN KEY (id_carrier) REFERENCES Carriers(id_carrier),
-    FOREIGN KEY (id_load) REFERENCES TransportLoads(id_load)
+    FOREIGN KEY (id_load) REFERENCES TransportLoads(id_load) ON DELETE SET NULL
 );
 
 -- Tabela `ShipmentLines`

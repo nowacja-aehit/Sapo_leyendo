@@ -6,6 +6,8 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Shipment } from "../../data/mockData";
 import { fetchShipments } from "../../services/api";
+import { fetchCarriers, createShipment as createShipmentApi, Carrier } from "../../services/shippingService";
+import { fetchOutboundOrders, OutboundOrder } from "../../services/outboundService";
 import {
   Dialog,
   DialogContent,
@@ -13,18 +15,29 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 export function ShipmentsView() {
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
   const [trackingView, setTrackingView] = useState<Shipment | null>(null);
   const [items, setItems] = useState<Shipment[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [carriers, setCarriers] = useState<Carrier[]>([]);
+  const [orders, setOrders] = useState<OutboundOrder[]>([]);
+  const [selectedOrderId, setSelectedOrderId] = useState<string>("");
+  const [selectedCarrierId, setSelectedCarrierId] = useState<string>("");
   const [newShipment, setNewShipment] = useState<Shipment>({
     id: 0,
     trackingNumber: "",
     destination: "",
     carrier: "",
-    status: "Preparing",
+    status: "PACKING",
     estimatedDelivery: new Date().toISOString().split("T")[0],
     items: 0,
   });
@@ -33,16 +46,27 @@ export function ShipmentsView() {
     const loadData = async () => {
       const data = await fetchShipments();
       setItems(data);
+      
+      // Load carriers and orders for dropdowns
+      try {
+        const [carrierData, orderData] = await Promise.all([
+          fetchCarriers(),
+          fetchOutboundOrders()
+        ]);
+        setCarriers(carrierData);
+        setOrders(orderData.filter(o => o.status === "PLANNED" || o.status === "PICKED"));
+      } catch (err) {
+        console.error("Failed to load carriers/orders", err);
+      }
     };
     loadData();
   }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Delivered": return "default";
-      case "In Transit": return "default";
-      case "Out for Delivery": return "secondary";
-      case "Preparing": return "secondary";
+      case "PACKING": return "secondary";
+      case "PACKED": return "default";
+      case "SHIPPED": return "default";
       default: return "default";
     }
   };
@@ -55,33 +79,66 @@ export function ShipmentsView() {
     setSelectedShipment(shipment);
   };
 
-  const handleAddShipment = () => {
-    const created = { ...newShipment, id: Date.now() };
-    setItems((prev) => [...prev, created]);
-    setIsDialogOpen(false);
+  const handleAddShipment = async () => {
+    if (!selectedOrderId || !selectedCarrierId) {
+      alert("Wybierz zamówienie i przewoźnika");
+      return;
+    }
+    
+    try {
+      const created = await createShipmentApi(
+        Number(selectedOrderId),
+        Number(selectedCarrierId),
+        newShipment.trackingNumber || undefined
+      );
+      
+      // Refresh shipments list
+      const data = await fetchShipments();
+      setItems(data);
+      
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error("Failed to create shipment via API", error);
+      // Fallback to local state
+      const carrier = carriers.find(c => c.id === Number(selectedCarrierId));
+      const created = { 
+        ...newShipment, 
+        id: Date.now(),
+        carrier: carrier?.name || newShipment.carrier,
+        trackingNumber: newShipment.trackingNumber || `TRK-${Date.now()}`
+      };
+      setItems((prev) => [...prev, created]);
+      setIsDialogOpen(false);
+      resetForm();
+    }
+  };
+
+  const resetForm = () => {
     setNewShipment({
       id: 0,
       trackingNumber: "",
       destination: "",
       carrier: "",
-      status: "Preparing",
+      status: "PACKING",
       estimatedDelivery: new Date().toISOString().split("T")[0],
       items: 0,
     });
+    setSelectedOrderId("");
+    setSelectedCarrierId("");
   };
 
   const advanceStatus = (shipment: Shipment) => {
-    const flow: Shipment['status'][] = ["Preparing", "In Transit", "Out for Delivery", "Delivered"];
+    const flow: Shipment['status'][] = ["PACKING", "PACKED", "SHIPPED"];
     const next = flow[flow.indexOf(shipment.status) + 1] || shipment.status;
     setItems((prev) => prev.map(s => s.id === shipment.id ? { ...s, status: next } : s));
   };
 
   const getTrackingSteps = (status: string) => {
     const allSteps = [
-      { label: "Przygotowanie", status: "Preparing", completed: true },
-      { label: "W tranzycie", status: "In Transit", completed: status !== "Preparing" },
-      { label: "W dostawie", status: "Out for Delivery", completed: status === "Out for Delivery" || status === "Delivered" },
-      { label: "Dostarczone", status: "Delivered", completed: status === "Delivered" },
+      { label: "Pakowanie", status: "PACKING", completed: true },
+      { label: "Spakowane", status: "PACKED", completed: status === "PACKED" || status === "SHIPPED" },
+      { label: "Wysłane", status: "SHIPPED", completed: status === "SHIPPED" },
     ];
     return allSteps;
   };
@@ -99,12 +156,11 @@ export function ShipmentsView() {
       </div>
 
       {/* Stats */}
-      <div className="grid sm:grid-cols-4 gap-4">
+      <div className="grid sm:grid-cols-3 gap-4">
         {[
-          { status: "Preparing", label: "Przygotowanie" },
-          { status: "In Transit", label: "W tranzycie" },
-          { status: "Out for Delivery", label: "W dostawie" },
-          { status: "Delivered", label: "Dostarczone" }
+          { status: "PACKING", label: "Pakowanie" },
+          { status: "PACKED", label: "Spakowane" },
+          { status: "SHIPPED", label: "Wysłane" }
         ].map((item) => {
           const count = items.filter(s => s.status === item.status).length;
           return (
@@ -334,39 +390,69 @@ export function ShipmentsView() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Dodaj przesyłkę</DialogTitle>
-            <DialogDescription>Rejestruj przesyłki nawet gdy backend jest niedostępny</DialogDescription>
+            <DialogDescription>Utwórz przesyłkę dla zamówienia wychodzącego</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 py-4">
-            <Input
-              placeholder="Numer śledzenia"
-              value={newShipment.trackingNumber}
-              onChange={(e) => setNewShipment({ ...newShipment, trackingNumber: e.target.value })}
-            />
-            <Input
-              placeholder="Przeznaczenie"
-              value={newShipment.destination}
-              onChange={(e) => setNewShipment({ ...newShipment, destination: e.target.value })}
-            />
-            <Input
-              placeholder="Przewoźnik"
-              value={newShipment.carrier}
-              onChange={(e) => setNewShipment({ ...newShipment, carrier: e.target.value })}
-            />
-            <Input
-              type="date"
-              value={newShipment.estimatedDelivery}
-              onChange={(e) => setNewShipment({ ...newShipment, estimatedDelivery: e.target.value })}
-            />
-            <Input
-              type="number"
-              placeholder="Liczba produktów"
-              value={newShipment.items}
-              onChange={(e) => setNewShipment({ ...newShipment, items: Number(e.target.value) })}
-            />
+            <div>
+              <label className="text-sm font-medium mb-1 block">Zamówienie *</label>
+              <Select value={selectedOrderId} onValueChange={setSelectedOrderId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Wybierz zamówienie..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {orders.map((order) => (
+                    <SelectItem key={order.id} value={String(order.id)}>
+                      {order.referenceNumber || order.orderNumber} - {order.customerName || order.customer}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Przewoźnik *</label>
+              <Select value={selectedCarrierId} onValueChange={setSelectedCarrierId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Wybierz przewoźnika..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {carriers.map((carrier) => (
+                    <SelectItem key={carrier.id} value={String(carrier.id)}>
+                      {carrier.name} ({carrier.serviceType || "Standard"})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Numer śledzenia (opcjonalnie)</label>
+              <Input
+                placeholder="Zostanie wygenerowany automatycznie"
+                value={newShipment.trackingNumber}
+                onChange={(e) => setNewShipment({ ...newShipment, trackingNumber: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Przeznaczenie</label>
+              <Input
+                placeholder="Adres dostawy"
+                value={newShipment.destination}
+                onChange={(e) => setNewShipment({ ...newShipment, destination: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Przewidywana dostawa</label>
+              <Input
+                type="date"
+                value={newShipment.estimatedDelivery}
+                onChange={(e) => setNewShipment({ ...newShipment, estimatedDelivery: e.target.value })}
+              />
+            </div>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Anuluj</Button>
-            <Button onClick={handleAddShipment}>Zapisz</Button>
+            <Button variant="outline" onClick={() => { setIsDialogOpen(false); resetForm(); }}>Anuluj</Button>
+            <Button onClick={handleAddShipment} disabled={!selectedOrderId || !selectedCarrierId}>
+              Utwórz przesyłkę
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -1,0 +1,96 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Java Backend",
+            "type": "shell",
+            "command": "mvn",
+            "args": [
+                "compile",
+                "-DskipTests"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$javac",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Start Backend (Maven)",
+            "type": "shell",
+            "command": "mvn",
+            "args": [
+                "spring-boot:run",
+                "\"-Dspring-boot.run.profiles=sqlite\""
+            ],
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^.*Starting SapoApplication.*$",
+                    "endsPattern": "^.*Started SapoApplication.*$"
+                }
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "SPRING_PROFILES_ACTIVE": "sqlite"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Start Frontend (npm)",
+            "type": "shell",
+            "command": "npm",
+            "args": ["run", "dev"],
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^.*VITE.*$",
+                    "endsPattern": "^.*ready in.*$"
+                }
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/Visualization"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "mvn",
+            "args": ["test"],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": "$javac",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Full Stack Start",
+            "dependsOn": ["Start Backend (Maven)", "Start Frontend (npm)"],
+            "dependsOrder": "parallel",
+            "problemMatcher": []
+        }
+    ]
+}

@@ -34,6 +34,9 @@ public class InboundService {
     @Autowired
     private DockAppointmentRepository dockAppointmentRepository;
 
+    @Autowired
+    private UnitOfMeasureRepository unitOfMeasureRepository;
+
     public List<InboundOrder> getAllInboundOrders() {
         return inboundOrderRepository.findAll();
     }
@@ -43,6 +46,10 @@ public class InboundService {
     }
 
     public InboundOrder saveInboundOrder(InboundOrder order) {
+        // Auto-generate referenceNumber if not provided (required field)
+        if (order.getReferenceNumber() == null || order.getReferenceNumber().isEmpty()) {
+            order.setReferenceNumber("INB-" + System.currentTimeMillis());
+        }
         return inboundOrderRepository.save(order);
     }
 
@@ -87,8 +94,16 @@ public class InboundService {
 
         // Create Inventory at Dock
         InboundOrder order = item.getInboundOrder();
-        Location dockLocation = locationRepository.findById(order.getDockId())
-                .orElseThrow(() -> new RuntimeException("Dock location not found"));
+        Location dockLocation;
+        if (order.getDockId() != null) {
+            dockLocation = locationRepository.findById(order.getDockId())
+                    .orElseThrow(() -> new RuntimeException("Dock location not found"));
+        } else {
+            // Use first available DOCK location as default
+            dockLocation = locationRepository.findFirstByLocationTypeNameAndIsActiveTrue("DOCK")
+                    .orElseGet(() -> locationRepository.findAll().stream().findFirst()
+                            .orElseThrow(() -> new RuntimeException("No locations available")));
+        }
 
         Inventory inventory = new Inventory();
         inventory.setProduct(item.getProduct());
@@ -97,6 +112,17 @@ public class InboundService {
         inventory.setLpn(lpn);
         inventory.setBatchNumber(item.getBatchNumber());
         inventory.setStatus(InventoryStatus.AVAILABLE);
+        inventory.setReceivedAt(LocalDateTime.now()); // Required field
+        
+        // Set UOM - use product's base UOM or find default "SZT" (pieces)
+        UnitOfMeasure uom = null;
+        if (item.getProduct() != null && item.getProduct().getIdBaseUom() != null) {
+            uom = unitOfMeasureRepository.findById(item.getProduct().getIdBaseUom()).orElse(null);
+        }
+        if (uom == null) {
+            uom = unitOfMeasureRepository.findById(1).orElse(null); // Default to first UOM
+        }
+        inventory.setUom(uom);
         
         inventoryRepository.save(inventory);
 

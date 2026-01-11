@@ -221,11 +221,11 @@ INSERT INTO InboundOrderItems (id_inbound_order, id_product, quantity_expected, 
 (2, 3, 20, 20);
 
 -- Tabela `Inventory`
-INSERT INTO Inventory (id_product, id_location, id_uom, quantity, status) VALUES
-(1, 7, 1, 10, 'AVAILABLE'), -- Laptops in A-01-01
-(2, 7, 1, 20, 'AVAILABLE'), -- iPhones in A-01-01
-(9, 8, 1, 50, 'AVAILABLE'), -- HDMI Cables in A-01-02
-(14, 9, 1, 5, 'AVAILABLE'); -- TVs in A-02-01
+INSERT INTO Inventory (id_product, id_location, id_uom, quantity, status, received_at) VALUES
+(1, 7, 1, 10, 'AVAILABLE', '2025-12-01 10:00:00'), -- Laptops in A-01-01
+(2, 7, 1, 20, 'AVAILABLE', '2025-12-02 14:30:00'), -- iPhones in A-01-01
+(9, 8, 1, 50, 'AVAILABLE', '2025-12-03 09:15:00'), -- HDMI Cables in A-01-02
+(14, 9, 1, 5, 'AVAILABLE', '2025-12-04 16:45:00'); -- TVs in A-02-01
 
 -- Tabela `Shipments`
 INSERT INTO Shipments (id_outbound_order, id_carrier, tracking_number, shipped_at, status) VALUES

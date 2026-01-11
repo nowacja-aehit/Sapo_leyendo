@@ -1,130 +1,226 @@
 package com.mycompany.sapo_leyendo.controller;
 
-import com.mycompany.sapo_leyendo.dto.dashboard.DashboardInventoryItem;
-import com.mycompany.sapo_leyendo.dto.dashboard.DashboardOrder;
-import com.mycompany.sapo_leyendo.dto.dashboard.DashboardShipment;
 import com.mycompany.sapo_leyendo.model.Inventory;
 import com.mycompany.sapo_leyendo.model.InventoryStatus;
 import com.mycompany.sapo_leyendo.model.Location;
-import com.mycompany.sapo_leyendo.model.Product;
 import com.mycompany.sapo_leyendo.model.OutboundOrder;
-import com.mycompany.sapo_leyendo.model.Shipment;
+import com.mycompany.sapo_leyendo.model.Product;
+import com.mycompany.sapo_leyendo.model.UnitOfMeasure;
 import com.mycompany.sapo_leyendo.service.InventoryService;
+import com.mycompany.sapo_leyendo.service.LocationService;
 import com.mycompany.sapo_leyendo.service.OutboundService;
-import com.mycompany.sapo_leyendo.repository.ShipmentRepository;
-import com.mycompany.sapo_leyendo.repository.CarrierRepository;
-import com.mycompany.sapo_leyendo.repository.ProductRepository;
-import com.mycompany.sapo_leyendo.repository.LocationRepository;
-import com.mycompany.sapo_leyendo.repository.InventoryRepository;
-import com.mycompany.sapo_leyendo.repository.OutboundOrderRepository;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.mycompany.sapo_leyendo.service.ProductService;
+import com.mycompany.sapo_leyendo.repository.UnitOfMeasureRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/dashboard")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"}, allowCredentials = "true")
 public class DashboardController {
-
-    private static final Logger logger = LoggerFactory.getLogger(DashboardController.class);
 
     @Autowired
     private InventoryService inventoryService;
-
+    
+    @Autowired
+    private ProductService productService;
+    
+    @Autowired
+    private LocationService locationService;
+    
+    @Autowired
+    private UnitOfMeasureRepository unitOfMeasureRepository;
+    
     @Autowired
     private OutboundService outboundService;
 
-    @Autowired
-    private ShipmentRepository shipmentRepository;
-    
-    @Autowired
-    private CarrierRepository carrierRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private LocationRepository locationRepository;
-
-    @Autowired
-    private InventoryRepository inventoryRepository;
-
-    @Autowired
-    private OutboundOrderRepository outboundOrderRepository;
-
-
-    @GetMapping("/shipments")
-    public ResponseEntity<List<Map<String, Object>>> getShipments() {
-        try {
-            List<Shipment> shipments = shipmentRepository.findAll();
-            List<Map<String, Object>> response = shipments.stream().map(shipment -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", shipment.getId());
-                map.put("trackingNumber", shipment.getTrackingNumber());
-                map.put("destination", shipment.getOutboundOrder() != null ? shipment.getOutboundOrder().getDestination() : "Unknown");
-                map.put("carrierId", shipment.getCarrierId());
-                map.put("status", shipment.getStatus().toString());
-                map.put("parcelCount", shipment.getParcels().size());
-                map.put("shippedAt", shipment.getShippedAt() != null ? shipment.getShippedAt().toString() : "N/A");
-                return map;
-            }).collect(Collectors.toList());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("Error retrieving shipments", e);
-            return ResponseEntity.status(500).build();
-        }
+    @GetMapping("/inventory")
+    public List<Inventory> getInventory() {
+        return inventoryService.getAllInventory();
     }
 
-    @GetMapping("/inventory")
-    public ResponseEntity<List<Map<String, Object>>> getInventory() {
-        List<Inventory> inventoryList = inventoryRepository.findAll();
-        List<Map<String, Object>> response = inventoryList.stream().map(inventory -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", inventory.getId());
-
-            Product product = inventory.getProduct();
-            if (product != null) {
-                map.put("productName", product.getName());
-                map.put("productSku", product.getSku());
+    @PostMapping("/inventory")
+    public ResponseEntity<Inventory> createInventory(@RequestBody Map<String, Object> request) {
+        Inventory inventory = new Inventory();
+        
+        // Pobierz Product z bazy
+        Integer productId = (Integer) request.get("productId");
+        if (productId != null) {
+            Product product = productService.getProductById(productId)
+                    .orElseThrow(() -> new RuntimeException("Product not found: " + productId));
+            inventory.setProduct(product);
+        }
+        
+        // Pobierz Location z bazy
+        Integer locationId = (Integer) request.get("locationId");
+        if (locationId != null) {
+            Location location = locationService.getLocationById(locationId)
+                    .orElseThrow(() -> new RuntimeException("Location not found: " + locationId));
+            inventory.setLocation(location);
+        }
+        
+        // Ustaw quantity
+        if (request.containsKey("quantity")) {
+            inventory.setQuantity((Integer) request.get("quantity"));
+        }
+        
+        // Ustaw domyślny UOM jeśli nie podano
+        if (request.containsKey("uomId")) {
+            Integer uomId = (Integer) request.get("uomId");
+            UnitOfMeasure uom = unitOfMeasureRepository.findById(uomId)
+                    .orElseThrow(() -> new RuntimeException("UOM not found: " + uomId));
+            inventory.setUom(uom);
+        } else {
+            // Użyj domyślnego UOM z produktu lub utwórz nowy
+            Integer baseUomId = inventory.getProduct().getIdBaseUom();
+            UnitOfMeasure uom;
+            
+            if (baseUomId != null) {
+                uom = unitOfMeasureRepository.findById(baseUomId).orElse(null);
+            } else {
+                uom = null;
             }
-
-            Location location = inventory.getLocation();
-            if (location != null) {
-                map.put("locationName", location.getName());
+            
+            // Jeśli nie znaleziono, spróbuj ID=1
+            if (uom == null) {
+                uom = unitOfMeasureRepository.findById(1).orElse(null);
             }
+            
+            // Jeśli nadal null, utwórz domyślny UOM
+            if (uom == null) {
+                uom = new UnitOfMeasure();
+                uom.setId(1);
+                uom.setCode("EA");
+                uom.setName("Each");
+                uom = unitOfMeasureRepository.save(uom);
+            }
+            
+            inventory.setUom(uom);
+        }
+        
+        // Ustaw pozostałe pola
+        if (request.containsKey("status")) {
+            String statusStr = (String) request.get("status");
+            try {
+                InventoryStatus status = InventoryStatus.valueOf(statusStr.toUpperCase());
+                inventory.setStatus(status);
+            } catch (IllegalArgumentException e) {
+                inventory.setStatus(InventoryStatus.AVAILABLE);
+            }
+        }
+        if (request.containsKey("batchNumber")) {
+            inventory.setBatchNumber((String) request.get("batchNumber"));
+        }
+        
+        // Ustaw receivedAt (NOT NULL w bazie danych)
+        inventory.setReceivedAt(java.time.LocalDateTime.now());
+        
+        return ResponseEntity.ok(inventoryService.saveInventory(inventory));
+    }
 
-            map.put("quantity", inventory.getQuantity());
-            map.put("status", inventory.getStatus().toString());
-            map.put("batchNumber", inventory.getBatchNumber());
-            map.put("receivedAt", inventory.getReceivedAt() != null ? inventory.getReceivedAt().toString() : "N/A");
-            return map;
-        }).collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+    @PutMapping("/inventory/{id}")
+    public ResponseEntity<Inventory> updateInventory(@PathVariable Integer id, @RequestBody Map<String, Object> updates) {
+        return inventoryService.getInventoryById(id)
+                .map(existing -> {
+                    // Aktualizuj tylko przesłane pola
+                    if (updates.containsKey("quantity")) {
+                        existing.setQuantity((Integer) updates.get("quantity"));
+                    }
+                    if (updates.containsKey("productId")) {
+                        Integer productId = (Integer) updates.get("productId");
+                        Product product = productService.getProductById(productId)
+                                .orElseThrow(() -> new RuntimeException("Product not found: " + productId));
+                        existing.setProduct(product);
+                    }
+                    if (updates.containsKey("locationId")) {
+                        Integer locationId = (Integer) updates.get("locationId");
+                        Location location = locationService.getLocationById(locationId)
+                                .orElseThrow(() -> new RuntimeException("Location not found: " + locationId));
+                        existing.setLocation(location);
+                    }
+                    // Support location by code/name (e.g., "A-01-01")
+                    if (updates.containsKey("locationCode")) {
+                        String locationCode = (String) updates.get("locationCode");
+                        Location location = locationService.getLocationByName(locationCode)
+                                .orElseThrow(() -> new RuntimeException("Location not found by code: " + locationCode));
+                        existing.setLocation(location);
+                    }
+                    if (updates.containsKey("status")) {
+                        String statusStr = (String) updates.get("status");
+                        try {
+                            InventoryStatus status = InventoryStatus.valueOf(statusStr.toUpperCase());
+                            existing.setStatus(status);
+                        } catch (IllegalArgumentException e) {
+                            existing.setStatus(InventoryStatus.AVAILABLE);
+                        }
+                    }
+                    if (updates.containsKey("batchNumber")) {
+                        existing.setBatchNumber((String) updates.get("batchNumber"));
+                    }
+                    // Handle price update - set inventory-specific unit price
+                    if (updates.containsKey("price")) {
+                        Object priceObj = updates.get("price");
+                        if (priceObj != null) {
+                            java.math.BigDecimal price;
+                            if (priceObj instanceof Number) {
+                                price = java.math.BigDecimal.valueOf(((Number) priceObj).doubleValue());
+                            } else {
+                                price = new java.math.BigDecimal(priceObj.toString());
+                            }
+                            existing.setUnitPrice(price);
+                        }
+                    }
+                    
+                    return ResponseEntity.ok(inventoryService.saveInventory(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/inventory/{id}")
+    public ResponseEntity<Void> deleteInventory(@PathVariable Integer id) {
+        inventoryService.getInventoryById(id).ifPresent(inv -> {
+            inventoryService.deleteInventory(id);
+        });
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/stats")
+    public Map<String, Object> getDashboardStats() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalProducts", 0);
+        stats.put("totalInventoryValue", 0.0);
+        stats.put("lowStockItems", 0);
+        stats.put("outOfStockItems", 0);
+        stats.put("totalOrders", 0);
+        stats.put("pendingOrders", 0);
+        return stats;
     }
 
     @GetMapping("/orders")
-    public ResponseEntity<List<Map<String, Object>>> getOrders() {
-        List<com.mycompany.sapo_leyendo.model.OutboundOrder> orders = outboundOrderRepository.findAll();
-        List<Map<String, Object>> response = orders.stream().map(order -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", order.getId());
-            map.put("referenceNumber", order.getReferenceNumber());
-            map.put("destination", order.getDestination());
-            map.put("status", order.getStatus());
-            map.put("itemCount", order.getItems().size());
-            map.put("destination", order.getDestination());
-            map.put("createdAt", order.getCreatedAt() != null ? order.getCreatedAt().toString() : "N/A");
-            return map;
-        }).collect(Collectors.toList());
+    public List<OutboundOrder> getDashboardOrders() {
+        return outboundService.getAllOutboundOrders();
+    }
+
+    @PostMapping("/orders")
+    public ResponseEntity<Map<String, Object>> createDashboardOrder(@RequestBody Map<String, Object> order) {
+        // Forward to OutboundController logic or just accept for dashboard display
+        Map<String, Object> response = new HashMap<>(order);
+        if (!response.containsKey("id")) {
+            response.put("id", java.util.UUID.randomUUID().toString());
+        }
+        // Ustaw domyślny status jeśli nie podano
+        if (!response.containsKey("status")) {
+            response.put("status", "NEW");
+        }
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/shipments")
+    public List<Map<String, Object>> getDashboardShipments() {
+        return List.of();
     }
 }

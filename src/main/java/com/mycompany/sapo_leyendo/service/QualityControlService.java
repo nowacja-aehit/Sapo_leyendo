@@ -33,7 +33,8 @@ public class QualityControlService {
         inspection.setProduct(product);
         inspection.setSourceType(sourceType);
         inspection.setReferenceId(referenceId);
-        inspection.setSampleSize(sampleSize);
+        inspection.setResult(InspectionResult.PENDING);
+        inspection.setInspectorNotes(sampleSize != null ? "Sample size: " + sampleSize : null);
         inspection.setCreatedAt(LocalDateTime.now());
         
         // Try to find a default test plan (simplified logic)
@@ -53,7 +54,7 @@ public class QualityControlService {
 
         inspection.setResult(result);
         inspection.setInspectorId(inspectorId);
-        inspection.setCompletedAt(LocalDateTime.now());
+        inspection.setInspectedAt(LocalDateTime.now());
 
         return qcInspectionRepository.save(inspection);
     }
@@ -63,25 +64,30 @@ public class QualityControlService {
         QcInspection inspection = qcInspectionRepository.findById(inspectionId)
                 .orElseThrow(() -> new RuntimeException("Inspection not found"));
 
-        if (inspection.getResult() == InspectionResult.PASS) {
+        if (inspection.getResult() == InspectionResult.PASSED) {
             throw new RuntimeException("Cannot create NCR for a passed inspection");
         }
 
         NonConformanceReport ncr = new NonConformanceReport();
+        ncr.setNcrNumber("NCR-" + System.currentTimeMillis());
         ncr.setInspection(inspection);
         ncr.setDefectType(defectType);
+        ncr.setSeverity(NcrSeverity.MINOR); // Default severity
         ncr.setDescription(description);
-        ncr.setPhotos(photos);
+        ncr.setStatus(NcrStatus.OPEN);
+        ncr.setCreatedAt(LocalDateTime.now());
 
         return ncrRepository.save(ncr);
     }
     
     @Transactional
-    public TestPlan createTestPlan(String name, Double aqlLevel, List<TestStep> steps) {
+    public TestPlan createTestPlan(String name, String description, String testSteps) {
         TestPlan plan = new TestPlan();
         plan.setName(name);
-        plan.setAqlLevel(aqlLevel);
-        plan.setSteps(steps);
+        plan.setDescription(description);
+        plan.setTestSteps(testSteps);
+        plan.setIsActive(true);
+        plan.setCreatedAt(LocalDateTime.now());
         return testPlanRepository.save(plan);
     }
 

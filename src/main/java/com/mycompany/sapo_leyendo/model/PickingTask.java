@@ -1,6 +1,7 @@
 package com.mycompany.sapo_leyendo.model;
 
 import jakarta.persistence.*;
+import com.mycompany.sapo_leyendo.converter.LocalDateTimeStringConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,6 +39,7 @@ public class PickingTask {
     @Column(nullable = false)
     private PickingTaskStatus status;
 
+    @Convert(converter = LocalDateTimeStringConverter.class)
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }

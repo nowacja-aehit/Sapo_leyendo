@@ -15,7 +15,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -51,7 +50,7 @@ class ReturnsControllerTest {
         OutboundOrder outboundOrder = new OutboundOrder();
         outboundOrder.setReferenceNumber("OUT-RMA-1");
         outboundOrder.setStatus("SHIPPED");
-        outboundOrder.setShipDate(LocalDate.now().minusDays(1));
+        outboundOrder.setShipDate(LocalDateTime.now().minusDays(1));
         outboundOrder.setCreatedAt(LocalDateTime.now());
         outboundOrder = outboundOrderRepository.save(outboundOrder);
 

@@ -42,6 +42,10 @@ public class InventoryService {
         return inventoryRepository.findByLocationId(locationId);
     }
 
+    public Optional<Inventory> getInventoryById(Integer id) {
+        return inventoryRepository.findById(id);
+    }
+
     public Inventory saveInventory(Inventory inventory) {
         return inventoryRepository.save(inventory);
     }
@@ -111,7 +115,7 @@ public class InventoryService {
                 .orElseThrow(() -> new RuntimeException("Location not found"));
 
         MoveTask task = new MoveTask();
-        task.setType(MoveTaskType.INTERNAL_MOVE);
+        task.setType(MoveTaskType.RELOCATE);
         task.setInventory(inventory);
         task.setSourceLocation(inventory.getLocation());
         task.setTargetLocation(targetLocation);

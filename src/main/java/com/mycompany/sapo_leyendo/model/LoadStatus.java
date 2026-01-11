@@ -1,8 +1,9 @@
 package com.mycompany.sapo_leyendo.model;
 
 public enum LoadStatus {
-    PLANNED,
+    PLANNING,
     LOADING,
-    DISPATCHED,
-    DELIVERED
+    IN_TRANSIT,
+    DELIVERED,
+    CANCELLED
 }
